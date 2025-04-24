@@ -1,5 +1,6 @@
 package com.example.roflparser.controller;
 
+import com.example.roflparser.dto.response.MatchDetailResponse;
 import com.example.roflparser.exception.DuplicateMatchException;
 import com.example.roflparser.service.MatchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,24 +13,24 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/rofl")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class RoflController {
 
     private final MatchService matchService;
 
-    @Operation(
-            summary = "ROFL 파일 업로드",
-            description = "사용자가 업로드한 ROFL 파일을 분석하여 DB에 저장합니다. 이미 등록된 matchId인 경우 오류를 반환합니다."
-    )
+    @Operation(summary = "ROFL 파일 업로드", description = "사용자가 업로드한 ROFL 파일을 분석하여 DB에 저장합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "업로드 성공"),
             @ApiResponse(responseCode = "400", description = "이미 등록된 경기입니다", content = @Content),
             @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
     })
-    @PostMapping("/upload")
+    @PostMapping("/rofl/upload")
     public ResponseEntity<?> uploadRoflFile(
+            @Parameter(description = ".rofl 리플레이 파일", required = true)
             @RequestParam("file") MultipartFile file) {
         try {
             matchService.handleRoflUpload(file);
@@ -39,5 +40,39 @@ public class RoflController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body("업로드 실패: " + e.getMessage());
         }
+    }
+
+    @Operation(summary = "플레이어로 경기 검색", description = "닉네임만으로 검색 가능. tagline이 있는 경우 정확히 일치하는 플레이어만 조회됩니다.")
+    @GetMapping("/matches/player")
+    public ResponseEntity<List<MatchDetailResponse>> getMatchesByPlayer(
+            @RequestParam String nickname,
+            @RequestParam(required = false)
+            @Parameter(description = "플레이어 태그라인 (예: KR1). 선택값입니다.") String tagline,
+            @RequestParam(required = false, defaultValue = "desc")
+            @Parameter(description = "정렬 순서 (asc=오래된순, desc=최신순)") String sort
+    ) {
+        List<MatchDetailResponse> matches = matchService.findMatchesByPlayer(nickname, tagline, sort);
+        return ResponseEntity.ok(matches);
+    }
+
+
+    @Operation(summary = "전체 경기 목록 조회", description = "저장된 모든 경기 정보를 세부사항과 함께 조회합니다. sort=asc 또는 desc (기본: desc)")
+    @GetMapping("/matches")
+    public ResponseEntity<List<MatchDetailResponse>> getAllMatches(
+            @RequestParam(required = false, defaultValue = "desc")
+            @Parameter(description = "정렬 순서 (asc=오래된순, desc=최신순)") String sort
+    ) {
+        List<MatchDetailResponse> matches = matchService.findAllMatches(sort);
+        return ResponseEntity.ok(matches);
+    }
+
+    @Operation(summary = "matchId로 경기 조회", description = "matchId를 기준으로 해당 경기의 세부 정보를 조회합니다.")
+    @GetMapping("/matches/{matchId}")
+    public ResponseEntity<MatchDetailResponse> getMatchById(
+            @Parameter(description = "matchId 예시: 7610933923", example = "7610933923")
+            @PathVariable String matchId
+    ) {
+        MatchDetailResponse match = matchService.findMatchByMatchId(matchId);
+        return ResponseEntity.ok(match);
     }
 }

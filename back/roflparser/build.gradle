@@ -1,16 +1,14 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '3.4.4'
-	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.springframework.boot' version '3.1.5' // ← 안정된 LTS 버전 추천
+	id 'io.spring.dependency-management' version '1.1.3'
 }
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+java {
+	sourceCompatibility = '17'
 }
 
 repositories {
@@ -18,25 +16,15 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	implementation 'io.springfox:springfox-swagger-ui:3.0.0'
-
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.mariadb.jdbc:mariadb-java-client:3.1.4'
 
-	implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-}
+	// ✅ Swagger - Spring Boot 3.x 호환 전용
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 
-tasks.named('test') {
-	useJUnitPlatform()
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

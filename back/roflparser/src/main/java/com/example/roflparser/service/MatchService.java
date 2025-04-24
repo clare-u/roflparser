@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.example.roflparser.dto.response.MatchDetailResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -18,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -114,6 +116,66 @@ public class MatchService {
         } else {
             throw new IllegalArgumentException("게임 JSON 블럭을 찾을 수 없습니다.");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public List<MatchDetailResponse> findMatchesByPlayer(String gameName, String tagLine, String sort) {
+        List<MatchParticipant> participants;
+
+        if (tagLine != null && !tagLine.isBlank()) {
+            // 기존 방식 (정확히 일치)
+            Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(gameName, tagLine)
+                    .orElseThrow(() -> new IllegalArgumentException("플레이어를 찾을 수 없습니다."));
+
+            participants = "asc".equalsIgnoreCase(sort)
+                    ? matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeAsc(player)
+                    : matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeDesc(player);
+        } else {
+            // nickname만으로 여러 명 찾기
+            List<Player> players = playerRepository.findAllByRiotIdGameName(gameName);
+            if (players.isEmpty()) {
+                throw new IllegalArgumentException("해당 닉네임의 플레이어가 없습니다.");
+            }
+
+            participants = players.stream()
+                    .flatMap(p -> {
+                        List<MatchParticipant> ps = "asc".equalsIgnoreCase(sort)
+                                ? matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeAsc(p)
+                                : matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeDesc(p);
+                        return ps.stream();
+                    })
+                    .toList();
+        }
+
+        return participants.stream()
+                .map(MatchParticipant::getMatch)
+                .distinct()
+                .map(match -> MatchDetailResponse.from(match, matchParticipantRepository.findAllByMatch(match)))
+                .collect(Collectors.toList());
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<MatchDetailResponse> findAllMatches(String sort) {
+        List<Match> matches = "asc".equalsIgnoreCase(sort)
+                ? matchRepository.findAllByOrderByGameDatetimeAsc()
+                : matchRepository.findAllByOrderByGameDatetimeDesc();
+
+        return matches.stream()
+                .map(match -> MatchDetailResponse.from(
+                        match, matchParticipantRepository.findAllByMatch(match)))
+                .collect(Collectors.toList());
+    }
+
+
+    @Transactional(readOnly = true)
+    public MatchDetailResponse findMatchByMatchId(String matchId) {
+        Match match = matchRepository.findByMatchId(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 matchId의 경기를 찾을 수 없습니다."));
+
+        List<MatchParticipant> participants = matchParticipantRepository.findAllByMatch(match);
+
+        return MatchDetailResponse.from(match, participants);
     }
 
 }
