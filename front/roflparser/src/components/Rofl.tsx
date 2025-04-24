@@ -6,7 +6,7 @@ import { useUploadRofl } from "@/hooks/rofl";
 export default function Rofl() {
   const [file, setFile] = useState<File | null>(null);
 
-  const { jsonData, handleUpload, isUploading } = useUploadRofl();
+  const { handleUpload, isUploading } = useUploadRofl();
 
   return (
     <div className="flex items-center justify-between">

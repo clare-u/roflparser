@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import {
   ApiErrorResponse,
   ApiRequestConfig,
@@ -32,7 +32,7 @@ export const handleApiRequest = async <T, M extends HttpMethod, D = undefined>(
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
       const apiError: ApiErrorResponse = error.response.data;
-      const { message, httpStatus, code } = apiError;
+      const { httpStatus } = apiError;
 
       if (httpStatus === 401) {
         // 리다이렉트 전에 메시지 저장

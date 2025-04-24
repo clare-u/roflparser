@@ -24,6 +24,7 @@ export const useUploadRofl = () => {
       const data = await uploadRoflFile(file);
       setJsonData(data);
       toast.success("전적 업로드 성공!");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err);
       toast.error(err);
