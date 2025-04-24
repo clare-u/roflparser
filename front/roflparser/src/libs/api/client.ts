@@ -7,8 +7,8 @@ import {
 } from "@/types";
 
 const api = axios.create({
-  // baseURL: "https://k11a107.p.ssafy.io",
-  baseURL: "http://localhost:8080",
+  baseURL: "http://13.209.73.53:8080",
+  // baseURL: "http://localhost:8080",
   withCredentials: true,
 });
 
