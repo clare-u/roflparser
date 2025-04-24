@@ -76,7 +76,7 @@ public class MatchService {
                     .champion(p.get("SKIN"))
                     .team(p.get("TEAM"))
                     .position(p.get("TEAM_POSITION"))
-                    .win(Boolean.parseBoolean(p.get("WIN")))
+                    .win("Win".equalsIgnoreCase(p.get("WIN")))
                     .championsKilled(Integer.parseInt(p.get("CHAMPIONS_KILLED")))
                     .assists(Integer.parseInt(p.get("ASSISTS")))
                     .numDeaths(Integer.parseInt(p.get("NUM_DEATHS")))
