@@ -1,4 +1,4 @@
-import { MatchSummary, PlayerSummary } from "@/types/rofl";
+import { PlayerSummary } from "@/types/rofl";
 
 // 포지션 순서 정의
 const POSITION_ORDER = ["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"];
