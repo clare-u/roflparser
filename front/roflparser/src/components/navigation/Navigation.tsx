@@ -49,7 +49,7 @@ const Navigation = () => {
     <nav className="sticky top-0 z-50 flex h-[80px] items-center justify-between bg-indigo-800 px-40">
       {/* 로고 영역 */}
       <Link href="/">
-        <Image src="/logo.png" alt="Logo" width={110} height={40} priority />
+        <Image src="/logo.png" alt="Logo" width={130} height={45} priority />
       </Link>
 
       {/* 메뉴 영역 */}

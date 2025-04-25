@@ -6,6 +6,13 @@ interface MatchCardProps {
   match: MatchSummary;
 }
 
+const formatGameLength = (ms: number): string => {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+};
+
 const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
   const { team100, team200 } = groupByTeam(match.players);
 
@@ -14,9 +21,9 @@ const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
 
   return (
     <div className="border rounded-xl p-4 mb-4 shadow-lg">
-      <div className="text-sm text-gray-500 mb-2">
-        Match ID: {match.matchId} /{" "}
-        {new Date(match.gameDatetime).toLocaleString()}
+      <div className="text-sm text-gray-600 mb-2">
+        {new Date(match.gameDatetime).toLocaleString()} / ⏱
+        {formatGameLength(match.gameLength)} / Match ID: {match.matchId}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
