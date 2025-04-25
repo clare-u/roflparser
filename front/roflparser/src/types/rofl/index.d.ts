@@ -16,3 +16,8 @@ export interface MatchSummary {
   gameLength: number;
   players: PlayerSummary[];
 }
+
+export interface PlayerInfo {
+  riotIdGameName: string;
+  riotIdTagLine: string;
+}

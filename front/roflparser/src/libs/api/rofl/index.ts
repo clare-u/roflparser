@@ -1,5 +1,5 @@
 import { handleApiRequest } from "../client";
-import { MatchSummary } from "@/types/rofl";
+import { MatchSummary, PlayerInfo } from "@/types/rofl";
 
 export const uploadRoflFile = async (file: File): Promise<string> => {
   const formData = new FormData();
@@ -24,6 +24,29 @@ export const getMatches = async (sort: "asc" | "desc" = "desc") => {
 export const getMatchById = async (matchId: string) => {
   return handleApiRequest<MatchSummary, "get">(
     `/api/matches/${matchId}`,
+    "get"
+  );
+};
+
+// 특정 플레이어의 전적을 닉네임/태그라인으로 검색
+export const getMatchesByPlayer = async (
+  nickname: string,
+  tagline?: string,
+  sort: "asc" | "desc" = "desc"
+) => {
+  const query = new URLSearchParams({ nickname, sort });
+  if (tagline) query.append("tagline", tagline);
+
+  return handleApiRequest<MatchSummary[], "get">(
+    `/api/matches/player?${query.toString()}`,
+    "get"
+  );
+};
+
+// 특정 닉네임을 가진 플레이어들의 태그라인 목록 조회
+export const getPlayersByNickname = async (nickname: string) => {
+  return handleApiRequest<PlayerInfo[], "get">(
+    `/api/players?nickname=${encodeURIComponent(nickname)}`,
     "get"
   );
 };

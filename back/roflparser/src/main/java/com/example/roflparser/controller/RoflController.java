@@ -1,6 +1,7 @@
 package com.example.roflparser.controller;
 
 import com.example.roflparser.dto.response.MatchDetailResponse;
+import com.example.roflparser.dto.response.PlayerSimpleResponse;
 import com.example.roflparser.exception.DuplicateMatchException;
 import com.example.roflparser.service.MatchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -75,4 +76,13 @@ public class RoflController {
         MatchDetailResponse match = matchService.findMatchByMatchId(matchId);
         return ResponseEntity.ok(match);
     }
+
+    @Operation(summary = "닉네임으로 플레이어 목록 조회", description = "nickname과 일치하는 플레이어들의 태그라인 정보를 조회합니다.")
+    @GetMapping("/players")
+    public ResponseEntity<List<PlayerSimpleResponse>> getPlayersByNickname(
+            @RequestParam String nickname
+    ) {
+        return ResponseEntity.ok(matchService.findPlayersByNickname(nickname));
+    }
+
 }

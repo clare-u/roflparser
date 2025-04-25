@@ -3,6 +3,7 @@ package com.example.roflparser.service;
 import com.example.roflparser.domain.Match;
 import com.example.roflparser.domain.MatchParticipant;
 import com.example.roflparser.domain.Player;
+import com.example.roflparser.dto.response.PlayerSimpleResponse;
 import com.example.roflparser.exception.DuplicateMatchException;
 import com.example.roflparser.repository.MatchParticipantRepository;
 import com.example.roflparser.repository.MatchRepository;
@@ -177,5 +178,13 @@ public class MatchService {
 
         return MatchDetailResponse.from(match, participants);
     }
+
+    @Transactional(readOnly = true)
+    public List<PlayerSimpleResponse> findPlayersByNickname(String nickname) {
+        return playerRepository.findAllByRiotIdGameName(nickname).stream()
+                .map(PlayerSimpleResponse::from)
+                .toList();
+    }
+
 
 }

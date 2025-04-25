@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import NavigationItem from "./NavigationItem";
 import SearchInput from "../input/SearchInput";
+import { getPlayersByNickname } from "@/libs";
 // import NavigationProfile from "./NavigationProfile";
 // import { useUserStore } from "@/store/userStore";
 // import { useFetchUser } from "@/hooks";
@@ -19,11 +20,29 @@ const Navigation = () => {
     setSearchValue(e.target.value);
   };
 
-  const handleSearchSubmit = (value: string) => {
+  const handleSearchSubmit = async (value: string) => {
     const trimmed = value.trim();
-    if (!trimmed) return; // 빈 문자열이면 라우팅하지 않음
+    if (!trimmed) return;
 
-    router.push(`/search/${trimmed}`);
+    // #이 포함된 경우는 그대로 사용
+    if (trimmed.includes("#")) {
+      router.push(`/${encodeURIComponent(trimmed)}`);
+      return;
+    }
+
+    // # 없이 들어온 경우 -> API로 태그라인 조회
+    try {
+      const players = await getPlayersByNickname(trimmed);
+      if (players.length > 0) {
+        const full = `${players[0].riotIdGameName}#${players[0].riotIdTagLine}`;
+        router.push(`/${encodeURIComponent(full)}`);
+      } else {
+        alert("해당 닉네임의 플레이어를 찾을 수 없습니다.");
+      }
+    } catch (err) {
+      console.error("플레이어 조회 실패", err);
+      alert("플레이어 조회 중 오류가 발생했습니다.");
+    }
   };
 
   // const user = useUserStore((state) => state.user); // zustand에서 현재 member 상태 가져오기
