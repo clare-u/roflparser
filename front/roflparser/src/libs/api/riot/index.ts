@@ -85,7 +85,7 @@ export const getMatchIdsByPuuid = async (
  * @param matchId Match ID 문자열
  * @returns 경기 상세 정보 (JSON)
  */
-export const getMatchById = async (matchId: string) => {
+export const getMatchByMatchId = async (matchId: string) => {
   const endpoint = `/lol/match/v5/matches/${matchId}`;
   return await handleRiotApiRequest(endpoint, RIOT_API_SERVERS.REGIONAL);
 };

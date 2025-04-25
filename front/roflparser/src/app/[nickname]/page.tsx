@@ -7,17 +7,18 @@ import Loading from "@/components/loading/Loading";
 
 export default function SearchPage() {
   const params = useParams<{ nickname: string }>();
-  const raw = params.nickname;
-  if (!raw) return <div>잘못된 요청입니다.</div>;
-
+  const raw = params.nickname ?? "";
   const decoded = decodeURIComponent(raw); // e.g., '토러스#KR1'
-  const [nickname, tagline] = decoded.split("#"); // tagline이 없으면 undefined
+  const [nickname, tagline] = decoded.split("#");
 
+  // ✅ 훅은 최상단에서 항상 실행되도록 함
   const {
     data: matches,
     isLoading,
     error,
   } = useMatchesByPlayer(nickname, tagline);
+
+  if (!nickname) return <div>잘못된 요청입니다.</div>;
 
   if (isLoading)
     if (isLoading)
