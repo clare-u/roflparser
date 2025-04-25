@@ -9,6 +9,7 @@ import { useParams } from "next/navigation";
 export default function SearchPage() {
   const { matchId } = useParams() as { matchId: string };
   const { data: match, isLoading, error } = useMatch(matchId);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const {
     championMap,
     loading: champLoading,

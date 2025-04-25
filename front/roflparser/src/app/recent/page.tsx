@@ -24,7 +24,7 @@ export default function SearchPage() {
       </div>
     );
 
-  if (error) return <div>에러 발생: {error.message}</div>;
+  if (error || champError) return <div>에러 발생: {error?.message}</div>;
 
   return (
     <div className="flex w-full max-w-[1200px] flex-col gap-[20px] py-[20px]">
