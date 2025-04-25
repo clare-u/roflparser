@@ -1,0 +1,20 @@
+# Node modules 폴더
+node_modules/
+
+# pnpm lock 파일 (일부 팀에서 특정 lock 파일을 관리하지 않기도 함)
+pnpm-lock.yaml
+
+# .env 파일 (환경 변수 파일, 보안 정보 포함)
+.env
+
+# 임시 파일들
+*.log
+*.tmp
+
+# IDE/편집기 관련 파일들 (예: VSCode)
+.vscode/
+.idea/
+
+# OS 관련 파일들
+.DS_Store  # macOS에서 생성되는 파일
+Thumbs.db  # Windows에서 생성되는 파일
