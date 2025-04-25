@@ -3,7 +3,7 @@ package com.example.roflparser.service;
 import com.example.roflparser.domain.Match;
 import com.example.roflparser.domain.MatchParticipant;
 import com.example.roflparser.domain.Player;
-import com.example.roflparser.dto.response.PlayerSimpleResponse;
+import com.example.roflparser.dto.response.*;
 import com.example.roflparser.exception.DuplicateMatchException;
 import com.example.roflparser.repository.MatchParticipantRepository;
 import com.example.roflparser.repository.MatchRepository;
@@ -12,12 +12,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import com.example.roflparser.dto.response.MatchDetailResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -120,40 +121,61 @@ public class MatchService {
     }
 
     @Transactional(readOnly = true)
-    public List<MatchDetailResponse> findMatchesByPlayer(String gameName, String tagLine, String sort) {
-        List<MatchParticipant> participants;
+    public List<PlayerStatsResponse> findMatchesByPlayer(String gameName, String tagLine, String sort) {
+        List<Player> players;
 
         if (tagLine != null && !tagLine.isBlank()) {
-            // 기존 방식 (정확히 일치)
             Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(gameName, tagLine)
                     .orElseThrow(() -> new IllegalArgumentException("플레이어를 찾을 수 없습니다."));
-
-            participants = "asc".equalsIgnoreCase(sort)
-                    ? matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeAsc(player)
-                    : matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeDesc(player);
+            players = List.of(player);
         } else {
-            // nickname만으로 여러 명 찾기
-            List<Player> players = playerRepository.findAllByRiotIdGameName(gameName);
+            players = playerRepository.findAllByRiotIdGameName(gameName);
             if (players.isEmpty()) {
                 throw new IllegalArgumentException("해당 닉네임의 플레이어가 없습니다.");
             }
-
-            participants = players.stream()
-                    .flatMap(p -> {
-                        List<MatchParticipant> ps = "asc".equalsIgnoreCase(sort)
-                                ? matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeAsc(p)
-                                : matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeDesc(p);
-                        return ps.stream();
-                    })
-                    .toList();
         }
 
-        return participants.stream()
-                .map(MatchParticipant::getMatch)
-                .distinct()
-                .map(match -> MatchDetailResponse.from(match, matchParticipantRepository.findAllByMatch(match)))
-                .collect(Collectors.toList());
+        return players.stream()
+                .map(player -> {
+                    List<MatchParticipant> parts = "asc".equalsIgnoreCase(sort)
+                            ? matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeAsc(player)
+                            : matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeDesc(player);
+
+                    SummaryStats summary = new SummaryStats();
+                    Map<String, SummaryStats> byChampion = new HashMap<>();
+                    Map<String, SummaryStats> byPosition = new HashMap<>();
+                    List<MatchResult> matches = new ArrayList<>();
+
+                    for (MatchParticipant p : parts) {
+                        accumulate(summary, p);
+
+                        byChampion.computeIfAbsent(p.getChampion(), k -> new SummaryStats());
+                        accumulate(byChampion.get(p.getChampion()), p);
+
+                        byPosition.computeIfAbsent(p.getPosition(), k -> new SummaryStats());
+                        accumulate(byPosition.get(p.getPosition()), p);
+
+                        matches.add(new MatchResult(p.getMatch().getMatchId(), p.getWin()));
+                    }
+
+// ✅ 모든 누적이 끝난 후 KDA 계산
+                    summary.setKda(calcKda(summary));
+                    byChampion.values().forEach(stat -> stat.setKda(calcKda(stat)));
+                    byPosition.values().forEach(stat -> stat.setKda(calcKda(stat)));
+
+
+                    return PlayerStatsResponse.builder()
+                            .gameName(player.getRiotIdGameName())
+                            .tagLine(player.getRiotIdTagLine())
+                            .summary(summary)
+                            .byChampion(byChampion)
+                            .byPosition(byPosition)
+                            .matches(matches)
+                            .build();
+                })
+                .toList();
     }
+
 
 
     @Transactional(readOnly = true)
@@ -185,6 +207,35 @@ public class MatchService {
                 .map(PlayerSimpleResponse::from)
                 .toList();
     }
+
+    private void accumulate(SummaryStats stats, MatchParticipant p) {
+        if (stats == null || p == null) return;
+
+        stats.setMatches(stats.getMatches() + 1);
+
+        boolean win = Boolean.TRUE.equals(p.getWin());
+        stats.setWins(stats.getWins() + (win ? 1 : 0));
+        stats.setLosses(stats.getLosses() + (win ? 0 : 1));
+
+        stats.setKills(stats.getKills() + safeInt(p.getChampionsKilled()));
+        stats.setDeaths(stats.getDeaths() + safeInt(p.getNumDeaths()));
+        stats.setAssists(stats.getAssists() + safeInt(p.getAssists()));
+    }
+
+    // null-safe Integer 처리용 유틸 함수
+    private int safeInt(Integer value) {
+        return value == null ? 0 : value;
+    }
+
+    private double calcKda(SummaryStats stat) {
+        return stat.getDeaths() == 0
+                ? stat.getKills() + stat.getAssists()
+                : (double) (stat.getKills() + stat.getAssists()) / stat.getDeaths();
+    }
+
+
+
+
 
 
 }

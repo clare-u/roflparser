@@ -2,6 +2,7 @@ package com.example.roflparser.controller;
 
 import com.example.roflparser.dto.response.MatchDetailResponse;
 import com.example.roflparser.dto.response.PlayerSimpleResponse;
+import com.example.roflparser.dto.response.PlayerStatsResponse;
 import com.example.roflparser.exception.DuplicateMatchException;
 import com.example.roflparser.service.MatchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,18 +44,19 @@ public class RoflController {
         }
     }
 
-    @Operation(summary = "플레이어로 경기 검색", description = "닉네임만으로 검색 가능. tagline이 있는 경우 정확히 일치하는 플레이어만 조회됩니다.")
+    @Operation(summary = "플레이어 통계 조회", description = "닉네임만으로 검색 가능. tagline이 있는 경우 정확히 일치하는 플레이어만 조회됩니다.")
     @GetMapping("/matches/player")
-    public ResponseEntity<List<MatchDetailResponse>> getMatchesByPlayer(
+    public ResponseEntity<List<PlayerStatsResponse>> getPlayerStatsByPlayer(
             @RequestParam String nickname,
             @RequestParam(required = false)
             @Parameter(description = "플레이어 태그라인 (예: KR1). 선택값입니다.") String tagline,
             @RequestParam(required = false, defaultValue = "desc")
             @Parameter(description = "정렬 순서 (asc=오래된순, desc=최신순)") String sort
     ) {
-        List<MatchDetailResponse> matches = matchService.findMatchesByPlayer(nickname, tagline, sort);
-        return ResponseEntity.ok(matches);
+        return ResponseEntity.ok(matchService.findMatchesByPlayer(nickname, tagline, sort));
     }
+
+
 
 
     @Operation(summary = "전체 경기 목록 조회", description = "저장된 모든 경기 정보를 세부사항과 함께 조회합니다. sort=asc 또는 desc (기본: desc)")
@@ -84,5 +86,7 @@ public class RoflController {
     ) {
         return ResponseEntity.ok(matchService.findPlayersByNickname(nickname));
     }
+
+
 
 }
