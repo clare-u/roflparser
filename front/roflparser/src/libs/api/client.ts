@@ -7,7 +7,8 @@ import {
 } from "@/types";
 
 const api = axios.create({
-  baseURL: "http://13.209.73.53:8080",
+  baseURL: "https://roflbot.kro.kr",
+  // baseURL: "http://13.209.73.53:8080",
   // baseURL: "http://localhost:8080",
   withCredentials: true,
 });
