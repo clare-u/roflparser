@@ -43,5 +43,10 @@ export interface PlayerStatsResponse {
   summary: SummaryStats;
   byChampion: Record<string, SummaryStats>;
   byPosition: Record<string, SummaryStats>;
-  matches: MatchResult[]; // or MatchSummary[] depending on what you return
+  matches: PlayerMatchInfo[]; // ← 기존 MatchResult[]에서 변경
+}
+
+export interface PlayerMatchInfo {
+  match: MatchSummary; // 전체 경기 정보
+  win: boolean; // 해당 플레이어 기준 승리 여부
 }

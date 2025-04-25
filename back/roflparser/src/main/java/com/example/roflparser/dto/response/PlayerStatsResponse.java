@@ -21,5 +21,5 @@ public class PlayerStatsResponse {
     private Map<String, SummaryStats> byChampion;
     private Map<String, SummaryStats> byPosition;
 
-    private List<MatchResult> matches;
+    private List<PlayerMatchInfo> matches;
 }

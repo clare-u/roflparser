@@ -144,7 +144,7 @@ public class MatchService {
                     SummaryStats summary = new SummaryStats();
                     Map<String, SummaryStats> byChampion = new HashMap<>();
                     Map<String, SummaryStats> byPosition = new HashMap<>();
-                    List<MatchResult> matches = new ArrayList<>();
+                    List<PlayerMatchInfo> matches = new ArrayList<>();
 
                     for (MatchParticipant p : parts) {
                         accumulate(summary, p);
@@ -155,14 +155,18 @@ public class MatchService {
                         byPosition.computeIfAbsent(p.getPosition(), k -> new SummaryStats());
                         accumulate(byPosition.get(p.getPosition()), p);
 
-                        matches.add(new MatchResult(p.getMatch().getMatchId(), p.getWin()));
+                        Match match = p.getMatch();
+                        List<MatchParticipant> participants = matchParticipantRepository.findAllByMatch(match);
+
+                        matches.add(PlayerMatchInfo.builder()
+                                .match(MatchDetailResponse.from(match, participants))
+                                .win(p.getWin())
+                                .build());
                     }
 
-// ✅ 모든 누적이 끝난 후 KDA 계산
                     summary.setKda(calcKda(summary));
                     byChampion.values().forEach(stat -> stat.setKda(calcKda(stat)));
                     byPosition.values().forEach(stat -> stat.setKda(calcKda(stat)));
-
 
                     return PlayerStatsResponse.builder()
                             .gameName(player.getRiotIdGameName())

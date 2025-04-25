@@ -26,6 +26,8 @@ export default function SearchPage() {
     );
   if (error) return <div>에러 발생: {error.message}</div>;
 
+  console.log(stats);
+
   return (
     <div className="flex w-full max-w-[1200px] flex-col gap-[20px] py-[40px]">
       {stats?.map((player) => (

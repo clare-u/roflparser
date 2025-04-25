@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class MatchResult {
-    private String matchId;
-    private boolean win;
+@NoArgsConstructor
+public class PlayerMatchInfo {
+    private MatchDetailResponse match; // 전체 경기 정보
+    private Boolean win;               // 해당 플레이어의 승리 여부
 }

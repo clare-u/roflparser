@@ -1,5 +1,6 @@
 import React from "react";
 import { PlayerStatsResponse, SummaryStats } from "@/types/rofl";
+import MatchCard from "./MatchCard";
 
 interface Props {
   player: PlayerStatsResponse;
@@ -54,24 +55,13 @@ const PlayerMatchCard: React.FC<Props> = ({ player }) => {
         </div>
       </div>
 
-      <div className="mt-4">
-        <h3 className="font-semibold text-lg mb-2 text-gray-800">
-          최근 경기 승패
-        </h3>
-        <ul className="flex flex-wrap gap-2">
-          {player.matches.map((match) => (
-            <li
-              key={match.matchId}
-              className={`text-sm px-3 py-1 rounded-full font-medium shadow-sm ${
-                match.win
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-red-100 text-red-700"
-              }`}
-            >
-              {match.matchId} - {match.win ? "승리" : "패배"}
-            </li>
-          ))}
-        </ul>
+      <div className="mt-6">
+        <h3 className="font-semibold text-lg mb-3 text-gray-800">참여 경기</h3>
+        {player.matches.map((matchInfo, idx) => (
+          <div key={idx}>
+            <MatchCard match={matchInfo.match} />
+          </div>
+        ))}
       </div>
     </div>
   );
