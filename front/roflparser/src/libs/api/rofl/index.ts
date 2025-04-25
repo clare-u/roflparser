@@ -1,5 +1,5 @@
 import { handleApiRequest } from "../client";
-import { MatchSummary, PlayerInfo } from "@/types/rofl";
+import { MatchSummary, PlayerInfo, PlayerStatsResponse } from "@/types/rofl";
 
 export const uploadRoflFile = async (file: File): Promise<string> => {
   const formData = new FormData();
@@ -37,7 +37,7 @@ export const getMatchesByPlayer = async (
   const query = new URLSearchParams({ nickname, sort });
   if (tagline) query.append("tagline", tagline);
 
-  return handleApiRequest<MatchSummary[], "get">(
+  return handleApiRequest<PlayerStatsResponse[], "get">(
     `/api/matches/player?${query.toString()}`,
     "get"
   );
