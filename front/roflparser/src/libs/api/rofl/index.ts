@@ -19,3 +19,11 @@ export const getMatches = async (sort: "asc" | "desc" = "desc") => {
     "get"
   );
 };
+
+// 개별 matchId로 경기 상세 정보 조회
+export const getMatchById = async (matchId: string) => {
+  return handleApiRequest<MatchSummary, "get">(
+    `/api/matches/${matchId}`,
+    "get"
+  );
+};
