@@ -1,8 +1,11 @@
+"use client";
+
 import React from "react";
 import { MatchSummary } from "@/types/rofl";
 import { groupByTeam } from "@/utils/teamsort";
 import { ChampionNameMap } from "@/hooks/riot/useChampionMap";
 import ChampionPortrait from "./ChampionPortrait";
+import Link from "next/link";
 
 interface MatchCardProps {
   match: MatchSummary;
@@ -34,9 +37,11 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, win, championMap }) => {
 
   return (
     <div className={`border rounded-xl p-4 mb-4 shadow-lg ${matchBgColor}`}>
-      <div className="text-sm mb-2">
-        {new Date(match.gameDatetime).toLocaleString()} / ⏱
-        {formatGameLength(match.gameLength)} / Match ID: {match.matchId}
+      <div className="mb-2 flex justify-between">
+        <div className="font-semibold">
+          KR-{match.matchId} ⏱{formatGameLength(match.gameLength)}
+        </div>
+        <div>업로드: {new Date(match.gameDatetime).toLocaleString()}</div>
       </div>
 
       {resultText && (
@@ -56,21 +61,30 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, win, championMap }) => {
             블루팀 - {team100Win ? "승리" : "패배"}
           </h3>
           <ul>
-            {team100.map((player) => (
-              <li
-                key={player.riotIdGameName + player.riotIdTagLine}
-                className="mb-1 flex items-center gap-2"
-              >
-                <ChampionPortrait
-                  championId={player.champion}
-                  nameMap={championMap}
-                />
-                <span>
-                  {player.riotIdGameName} #{player.riotIdTagLine} (
-                  {player.kills}/{player.deaths}/{player.assists})
-                </span>
-              </li>
-            ))}
+            {team100.map((player) => {
+              const nickname = `${player.riotIdGameName}#${player.riotIdTagLine}`;
+              const encodedNickname = encodeURIComponent(nickname);
+              return (
+                <li
+                  key={player.riotIdGameName + player.riotIdTagLine}
+                  className="mb-1 flex items-center gap-2"
+                >
+                  <ChampionPortrait
+                    championId={player.champion}
+                    nameMap={championMap}
+                  />
+                  <Link
+                    href={`/${encodedNickname}`}
+                    className="hover:underline text-black"
+                  >
+                    {player.riotIdGameName} #{player.riotIdTagLine}
+                  </Link>
+                  <span className="text-gray-600">
+                    ({player.kills}/{player.deaths}/{player.assists})
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
@@ -84,21 +98,30 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, win, championMap }) => {
             레드팀 - {team200Win ? "승리" : "패배"}
           </h3>
           <ul>
-            {team200.map((player) => (
-              <li
-                key={player.riotIdGameName + player.riotIdTagLine}
-                className="mb-1 flex items-center gap-2"
-              >
-                <ChampionPortrait
-                  championId={player.champion}
-                  nameMap={championMap}
-                />
-                <span>
-                  {player.riotIdGameName} #{player.riotIdTagLine} (
-                  {player.kills}/{player.deaths}/{player.assists})
-                </span>
-              </li>
-            ))}
+            {team200.map((player) => {
+              const nickname = `${player.riotIdGameName}#${player.riotIdTagLine}`;
+              const encodedNickname = encodeURIComponent(nickname);
+              return (
+                <li
+                  key={player.riotIdGameName + player.riotIdTagLine}
+                  className="mb-1 flex items-center gap-2"
+                >
+                  <ChampionPortrait
+                    championId={player.champion}
+                    nameMap={championMap}
+                  />
+                  <Link
+                    href={`/${encodedNickname}`}
+                    className="hover:underline text-black"
+                  >
+                    {player.riotIdGameName} #{player.riotIdTagLine}
+                  </Link>
+                  <span className="text-gray-600">
+                    ({player.kills}/{player.deaths}/{player.assists})
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
