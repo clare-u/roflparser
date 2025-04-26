@@ -74,6 +74,7 @@ const Navigation = () => {
       {/* 메뉴 영역 */}
       <div className="flex gap-[36px] p-10">
         <NavigationItem href="/recent">최근 전적</NavigationItem>
+        <NavigationItem href="/balance">밸런스</NavigationItem>
       </div>
 
       {/* 프로필 영역 */}

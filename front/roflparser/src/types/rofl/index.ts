@@ -50,3 +50,11 @@ export interface PlayerMatchInfo {
   match: MatchSummary; // 전체 경기 정보
   win: boolean; // 해당 플레이어 기준 승리 여부
 }
+
+export enum Position {
+  TOP = "TOP",
+  JUNGLE = "JUNGLE",
+  MIDDLE = "MIDDLE",
+  BOTTOM = "BOTTOM",
+  UTILITY = "UTILITY",
+}
