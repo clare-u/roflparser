@@ -48,7 +48,7 @@ public class MatchDetailResponse {
                     .riotIdTagLine(mp.getPlayer().getRiotIdTagLine())
                     .champion(mp.getChampion())
                     .team(mp.getTeam())
-                    .position(mp.getPosition())
+                    .position(mp.getPosition().name())
                     .win(mp.getWin())
                     .kills(mp.getChampionsKilled())
                     .deaths(mp.getNumDeaths())

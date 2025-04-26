@@ -3,6 +3,7 @@ package com.example.roflparser.service;
 import com.example.roflparser.domain.Match;
 import com.example.roflparser.domain.MatchParticipant;
 import com.example.roflparser.domain.Player;
+import com.example.roflparser.domain.type.Position;
 import com.example.roflparser.dto.response.*;
 import com.example.roflparser.exception.DuplicateMatchException;
 import com.example.roflparser.repository.MatchParticipantRepository;
@@ -77,7 +78,7 @@ public class MatchService {
                     .player(player)
                     .champion(p.get("SKIN"))
                     .team(p.get("TEAM"))
-                    .position(p.get("TEAM_POSITION"))
+                    .position(Position.valueOf(p.get("TEAM_POSITION")))
                     .win("Win".equalsIgnoreCase(p.get("WIN")))
                     .championsKilled(Integer.parseInt(p.get("CHAMPIONS_KILLED")))
                     .assists(Integer.parseInt(p.get("ASSISTS")))
@@ -152,8 +153,9 @@ public class MatchService {
                         byChampion.computeIfAbsent(p.getChampion(), k -> new SummaryStats());
                         accumulate(byChampion.get(p.getChampion()), p);
 
-                        byPosition.computeIfAbsent(p.getPosition(), k -> new SummaryStats());
-                        accumulate(byPosition.get(p.getPosition()), p);
+                        Position pos = p.getPosition(); // 이미 Enum일 경우 그대로 사용
+                        byPosition.computeIfAbsent(String.valueOf(pos), k -> new SummaryStats());
+                        accumulate(byPosition.get(pos), p);
 
                         Match match = p.getMatch();
                         List<MatchParticipant> participants = matchParticipantRepository.findAllByMatch(match);

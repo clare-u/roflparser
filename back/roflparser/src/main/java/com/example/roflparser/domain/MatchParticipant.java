@@ -1,5 +1,6 @@
 package com.example.roflparser.domain;
 
+import com.example.roflparser.domain.type.Position;
 import jakarta.persistence.*;
         import lombok.*;
         import org.springframework.data.annotation.CreatedDate;
@@ -35,8 +36,9 @@ public class MatchParticipant {
     @Column(name = "team", length = 10)
     private String team;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "position", length = 20)
-    private String position;
+    private Position position;
 
     @Column(name = "win")
     private Boolean win;
