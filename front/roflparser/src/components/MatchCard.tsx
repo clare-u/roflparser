@@ -41,7 +41,9 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, win, championMap }) => {
         <div className="font-semibold">
           KR-{match.matchId} ⏱{formatGameLength(match.gameLength)}
         </div>
-        <div>업로드: {new Date(match.gameDatetime).toLocaleString()}</div>
+        <div className="text-sm">
+          업로드: {new Date(match.gameDatetime).toLocaleString()}
+        </div>
       </div>
 
       {resultText && (
@@ -92,7 +94,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, win, championMap }) => {
         <div>
           <h3
             className={`font-bold mb-2 ${
-              team200Win ? "text-blue-600" : "text-gray-500"
+              team200Win ? "text-red-600" : "text-gray-500"
             }`}
           >
             레드팀 - {team200Win ? "승리" : "패배"}

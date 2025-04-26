@@ -36,7 +36,8 @@ const SummaryBox = ({
       {stats.matches}전 {stats.wins}승 {stats.losses}패
     </p>
     <p>
-      KDA: {stats.kills}/{stats.deaths}/{stats.assists} ({stats.kda.toFixed(2)})
+      KDA: {stats.avgKills.toFixed(2)}/{stats.avgDeaths.toFixed(2)}/
+      {stats.avgAssists.toFixed(2)} ({stats.kda.toFixed(2)})
     </p>
   </div>
 );

@@ -30,6 +30,11 @@ export interface SummaryStats {
   deaths: number;
   assists: number;
   kda: number;
+
+  // 평균 킬/데스/어시 (double)
+  avgKills: number;
+  avgDeaths: number;
+  avgAssists: number;
 }
 
 export interface MatchResult {
