@@ -1,5 +1,6 @@
 package com.example.roflparser.dto.response;
 
+import com.example.roflparser.domain.type.Position;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,7 +20,7 @@ public class PlayerStatsResponse {
 
     private SummaryStats summary;
     private Map<String, SummaryStats> byChampion;
-    private Map<String, SummaryStats> byPosition;
+    private Map<Position, SummaryStats> byPosition;
 
     private List<PlayerMatchInfo> matches;
 }

@@ -37,24 +37,34 @@ public class MatchService {
 
     private final ObjectMapper objectMapper = new ObjectMapper(); // JSON 파싱용
 
+    // Swagger 전용 (디버깅용)
+    @Transactional(readOnly = true)
+    public Map<String, Object> parseRoflOnly(MultipartFile file) throws Exception {
+        return parseRoflToJson(file);
+    }
+
+
+    /**
+     * ROFL 파일을 업로드하고 match, player, participant 데이터 저장
+     */
     @Transactional
     public void handleRoflUpload(MultipartFile file) throws Exception {
-        // 1. MatchId 추출
+        // 1. 파일명에서 MatchId 추출
         String originalFilename = file.getOriginalFilename();
         String matchId = extractMatchIdFromFilename(originalFilename); // "KR-7610933923.rofl" -> "7610933923"
 
-        // 2. 중복 확인
+        // 2. 중복 MatchId 존재 여부 확인
         if (matchRepository.existsByMatchId(matchId)) {
             throw new DuplicateMatchException();
         }
 
-        // 3. 업로드 시점 시간
+        // 3. 업로드 시점 저장
         LocalDateTime uploadedAt = LocalDateTime.now();
 
-        // 4. 파일에서 JSON 파싱
+        // 4. ROFL 파일 내 JSON 파싱
         Map<String, Object> json = parseRoflToJson(file);
 
-        // 5. Match 저장
+        // 5. Match 데이터 저장
         Match match = matchRepository.save(Match.builder()
                 .matchId(matchId)
                 .gameDatetime(uploadedAt)
@@ -63,8 +73,9 @@ public class MatchService {
 
         List<Map<String, String>> participants = (List<Map<String, String>>) json.get("statsJson");
 
+        // 6. 참가자 데이터 저장
         for (Map<String, String> p : participants) {
-            // 6. 플레이어 저장 (존재 확인)
+            // 플레이어 존재 여부 확인 후 저장
             Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(
                             p.get("RIOT_ID_GAME_NAME"), p.get("RIOT_ID_TAG_LINE"))
                     .orElseGet(() -> playerRepository.save(Player.builder()
@@ -72,7 +83,7 @@ public class MatchService {
                             .riotIdTagLine(p.get("RIOT_ID_TAG_LINE"))
                             .build()));
 
-            // 7. match_participant 저장
+            // MatchParticipant 저장
             matchParticipantRepository.save(MatchParticipant.builder()
                     .match(match)
                     .player(player)
@@ -87,15 +98,23 @@ public class MatchService {
         }
     }
 
+    /**
+     * 파일명에서 숫자만 추출하여 MatchId 생성
+     */
     private String extractMatchIdFromFilename(String filename) {
         return filename.replaceAll("[^0-9]", ""); // "KR-7610933923.rofl" → "7610933923"
     }
 
+    /**
+     * ROFL 파일로부터 JSON을 파싱해온다
+     */
     private Map<String, Object> parseRoflToJson(MultipartFile file) throws Exception {
         InputStream fileContent = file.getInputStream();
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] data = new byte[1024];
         int nRead;
+
+        // 파일 스트림 읽기
         while ((nRead = fileContent.read(data, 0, data.length)) != -1) {
             buffer.write(data, 0, nRead);
         }
@@ -103,6 +122,7 @@ public class MatchService {
         byte[] roflData = buffer.toByteArray();
         String roflString = new String(roflData, StandardCharsets.UTF_8);
 
+        // 게임 정보 JSON 블럭 찾기
         String marker = "{\"gameLength\"";
         int pos = roflString.indexOf(marker);
 
@@ -110,7 +130,7 @@ public class MatchService {
             String jsonStr = roflString.substring(pos);
             Map<String, Object> parsed = objectMapper.readValue(jsonStr, new TypeReference<>() {});
 
-            // statsJson을 한 번 더 파싱해서 넣어줌
+            // statsJson 필드를 다시 파싱해서 넣기
             String statsJsonRaw = (String) parsed.get("statsJson");
             List<Map<String, String>> statsParsed = objectMapper.readValue(statsJsonRaw, new TypeReference<>() {});
             parsed.put("statsJson", statsParsed);
@@ -121,15 +141,20 @@ public class MatchService {
         }
     }
 
+    /**
+     * 특정 플레이어의 모든 전적 조회 (닉네임+태그라인 or 닉네임만)
+     */
     @Transactional(readOnly = true)
     public List<PlayerStatsResponse> findMatchesByPlayer(String gameName, String tagLine, String sort) {
         List<Player> players;
 
+        // 닉네임+태그라인으로 플레이어 찾기
         if (tagLine != null && !tagLine.isBlank()) {
             Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(gameName, tagLine)
                     .orElseThrow(() -> new IllegalArgumentException("플레이어를 찾을 수 없습니다."));
             players = List.of(player);
         } else {
+            // 닉네임만으로 찾기
             players = playerRepository.findAllByRiotIdGameName(gameName);
             if (players.isEmpty()) {
                 throw new IllegalArgumentException("해당 닉네임의 플레이어가 없습니다.");
@@ -138,25 +163,30 @@ public class MatchService {
 
         return players.stream()
                 .map(player -> {
+                    // 매치 참가 정보 정렬해서 가져오기
                     List<MatchParticipant> parts = "asc".equalsIgnoreCase(sort)
                             ? matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeAsc(player)
                             : matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeDesc(player);
 
                     SummaryStats summary = new SummaryStats();
                     Map<String, SummaryStats> byChampion = new HashMap<>();
-                    Map<String, SummaryStats> byPosition = new HashMap<>();
+                    Map<Position, SummaryStats> byPosition = new HashMap<>();
                     List<PlayerMatchInfo> matches = new ArrayList<>();
 
                     for (MatchParticipant p : parts) {
+                        // 전체 요약 통계 누적
                         accumulate(summary, p);
 
+                        // 챔피언별 통계 누적
                         byChampion.computeIfAbsent(p.getChampion(), k -> new SummaryStats());
                         accumulate(byChampion.get(p.getChampion()), p);
 
-                        Position pos = p.getPosition(); // 이미 Enum일 경우 그대로 사용
-                        byPosition.computeIfAbsent(String.valueOf(pos), k -> new SummaryStats());
+                        // 포지션별 통계 누적
+                        Position pos = p.getPosition();
+                        byPosition.computeIfAbsent(pos, k -> new SummaryStats());
                         accumulate(byPosition.get(pos), p);
 
+                        // 경기 기록 저장
                         Match match = p.getMatch();
                         List<MatchParticipant> participants = matchParticipantRepository.findAllByMatch(match);
 
@@ -166,10 +196,12 @@ public class MatchService {
                                 .build());
                     }
 
+                    // KDA 계산
                     summary.setKda(calcKda(summary));
                     byChampion.values().forEach(stat -> stat.setKda(calcKda(stat)));
                     byPosition.values().forEach(stat -> stat.setKda(calcKda(stat)));
 
+                    // 응답 객체 반환
                     return PlayerStatsResponse.builder()
                             .gameName(player.getRiotIdGameName())
                             .tagLine(player.getRiotIdTagLine())
@@ -182,13 +214,14 @@ public class MatchService {
                 .toList();
     }
 
-
-
+    /**
+     * 전체 매치 조회 (MatchId 기준 정렬)
+     */
     @Transactional(readOnly = true)
     public List<MatchDetailResponse> findAllMatches(String sort) {
         List<Match> matches = "asc".equalsIgnoreCase(sort)
-                ? matchRepository.findAllByOrderByGameDatetimeAsc()
-                : matchRepository.findAllByOrderByGameDatetimeDesc();
+                ? matchRepository.findAllByOrderByMatchIdAsc()
+                : matchRepository.findAllByOrderByMatchIdDesc();
 
         return matches.stream()
                 .map(match -> MatchDetailResponse.from(
@@ -196,7 +229,9 @@ public class MatchService {
                 .collect(Collectors.toList());
     }
 
-
+    /**
+     * MatchId로 특정 매치 조회
+     */
     @Transactional(readOnly = true)
     public MatchDetailResponse findMatchByMatchId(String matchId) {
         Match match = matchRepository.findByMatchId(matchId)
@@ -207,6 +242,9 @@ public class MatchService {
         return MatchDetailResponse.from(match, participants);
     }
 
+    /**
+     * 닉네임으로 플레이어 목록 조회
+     */
     @Transactional(readOnly = true)
     public List<PlayerSimpleResponse> findPlayersByNickname(String nickname) {
         return playerRepository.findAllByRiotIdGameName(nickname).stream()
@@ -214,6 +252,9 @@ public class MatchService {
                 .toList();
     }
 
+    /**
+     * 전적 누적 계산
+     */
     private void accumulate(SummaryStats stats, MatchParticipant p) {
         if (stats == null || p == null) return;
 
@@ -228,20 +269,19 @@ public class MatchService {
         stats.setAssists(stats.getAssists() + safeInt(p.getAssists()));
     }
 
-    // null-safe Integer 처리용 유틸 함수
+    /**
+     * null-safe Integer 변환
+     */
     private int safeInt(Integer value) {
         return value == null ? 0 : value;
     }
 
+    /**
+     * KDA 계산
+     */
     private double calcKda(SummaryStats stat) {
         return stat.getDeaths() == 0
                 ? stat.getKills() + stat.getAssists()
                 : (double) (stat.getKills() + stat.getAssists()) / stat.getDeaths();
     }
-
-
-
-
-
-
 }

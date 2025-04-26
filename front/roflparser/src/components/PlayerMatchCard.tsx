@@ -22,7 +22,7 @@ const SummaryBox = ({
       title === "JUNGLE" ||
       title === "MIDDLE" ||
       title === "BOTTOM" ||
-      title === "UTLITY" ? (
+      title === "UTILITY" ? (
         <Image
           src={`/position/${title}.svg`}
           alt={String(title)}

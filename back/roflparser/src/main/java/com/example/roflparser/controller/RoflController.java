@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -23,6 +24,15 @@ import java.util.List;
 public class RoflController {
 
     private final MatchService matchService;
+
+    @Operation(summary = "ROFL 파일 파싱(디버깅용)", description = "ROFL 파일을 업로드하여 게임 정보를 JSON으로 반환합니다.")
+    @PostMapping("/parse")
+    public Map<String, Object> parseRoflFile(
+            @Parameter(description = "업로드할 ROFL 파일", required = true)
+            @RequestPart("file") MultipartFile file
+    ) throws Exception {
+        return matchService.parseRoflOnly(file);
+    }
 
     @Operation(summary = "ROFL 파일 업로드", description = "사용자가 업로드한 ROFL 파일을 분석하여 DB에 저장합니다.")
     @ApiResponses(value = {
@@ -55,9 +65,6 @@ public class RoflController {
     ) {
         return ResponseEntity.ok(matchService.findMatchesByPlayer(nickname, tagline, sort));
     }
-
-
-
 
     @Operation(summary = "전체 경기 목록 조회", description = "저장된 모든 경기 정보를 세부사항과 함께 조회합니다. sort=asc 또는 desc (기본: desc)")
     @GetMapping("/matches")

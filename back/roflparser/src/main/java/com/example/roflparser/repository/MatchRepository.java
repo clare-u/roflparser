@@ -19,4 +19,8 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 
     // 전체 경기 - 오래된순 정렬
     List<Match> findAllByOrderByGameDatetimeAsc();
+
+    // 전체 경기 - MatchId 순 최신순, 오래된순 정렬
+    List<Match> findAllByOrderByMatchIdAsc();
+    List<Match> findAllByOrderByMatchIdDesc();
 }

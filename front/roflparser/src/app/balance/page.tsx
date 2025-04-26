@@ -20,7 +20,7 @@ export default function Balance() {
       </button>
 
       {showTable && (
-        <div className="mt-6">
+        <div className="px-[20px]">
           <BalanceTable />
         </div>
       )}
