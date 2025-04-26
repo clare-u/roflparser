@@ -33,7 +33,7 @@ const SummaryBox = ({
       <h4 className="font-bold text-gray-700">{title}</h4>
     </div>
     <p>
-      전적: {stats.matches}전 {stats.wins}승 {stats.losses}패
+      {stats.matches}전 {stats.wins}승 {stats.losses}패
     </p>
     <p>
       KDA: {stats.kills}/{stats.deaths}/{stats.assists} ({stats.kda.toFixed(2)})
@@ -49,8 +49,8 @@ const PlayerMatchCard: React.FC<Props> = ({ player }) => {
 
   return (
     <div className="border rounded-xl p-6 mb-6 shadow-md bg-gray-50">
-      <h2 className="text-xl font-semibold text-indigo-800 mb-4">
-        {player.gameName}#{player.tagLine}
+      <h2 className="text-3xl font-semibold text-indigo-800 mb-4">
+        {player.gameName} #{player.tagLine}
       </h2>
 
       <SummaryBox title="총 전적" stats={player.summary} />

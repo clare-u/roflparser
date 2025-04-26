@@ -13,19 +13,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 @Service
 @RequiredArgsConstructor
@@ -34,48 +30,44 @@ public class MatchService {
     private final MatchRepository matchRepository;
     private final PlayerRepository playerRepository;
     private final MatchParticipantRepository matchParticipantRepository;
-
     private final ObjectMapper objectMapper = new ObjectMapper(); // JSON 파싱용
 
-    // Swagger 전용 (디버깅용)
+    /**
+     * Swagger 테스트용 - ROFL 파일 파싱만 수행
+     */
     @Transactional(readOnly = true)
     public Map<String, Object> parseRoflOnly(MultipartFile file) throws Exception {
         return parseRoflToJson(file);
     }
 
-
     /**
-     * ROFL 파일을 업로드하고 match, player, participant 데이터 저장
+     * ROFL 파일 업로드 및 저장
      */
     @Transactional
     public void handleRoflUpload(MultipartFile file) throws Exception {
-        // 1. 파일명에서 MatchId 추출
         String originalFilename = file.getOriginalFilename();
-        String matchId = extractMatchIdFromFilename(originalFilename); // "KR-7610933923.rofl" -> "7610933923"
+        String matchId = extractMatchIdFromFilename(originalFilename); // 파일명에서 matchId 추출
 
-        // 2. 중복 MatchId 존재 여부 확인
         if (matchRepository.existsByMatchId(matchId)) {
-            throw new DuplicateMatchException();
+            throw new DuplicateMatchException(); // 이미 존재하면 예외
         }
 
-        // 3. 업로드 시점 저장
-        LocalDateTime uploadedAt = LocalDateTime.now();
+        LocalDateTime uploadedAt = LocalDateTime.now(); // 업로드 시간 저장
+        Map<String, Object> json = parseRoflToJson(file); // 파일 JSON 파싱
 
-        // 4. ROFL 파일 내 JSON 파싱
-        Map<String, Object> json = parseRoflToJson(file);
-
-        // 5. Match 데이터 저장
+        // Match 테이블 저장
         Match match = matchRepository.save(Match.builder()
                 .matchId(matchId)
                 .gameDatetime(uploadedAt)
                 .gameLength((Integer) json.get("gameLength"))
                 .build());
 
+        // 참가자 목록 가져오기
         List<Map<String, String>> participants = (List<Map<String, String>>) json.get("statsJson");
 
-        // 6. 참가자 데이터 저장
+        // 각 참가자 처리
         for (Map<String, String> p : participants) {
-            // 플레이어 존재 여부 확인 후 저장
+            // 플레이어 존재하면 가져오고, 없으면 새로 저장
             Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(
                             p.get("RIOT_ID_GAME_NAME"), p.get("RIOT_ID_TAG_LINE"))
                     .orElseGet(() -> playerRepository.save(Player.builder()
@@ -89,7 +81,7 @@ public class MatchService {
                     .player(player)
                     .champion(p.get("SKIN"))
                     .team(p.get("TEAM"))
-                    .position(Position.valueOf(p.get("TEAM_POSITION")))
+                    .position(Position.valueOf(p.get("TEAM_POSITION"))) // Enum으로 변환
                     .win("Win".equalsIgnoreCase(p.get("WIN")))
                     .championsKilled(Integer.parseInt(p.get("CHAMPIONS_KILLED")))
                     .assists(Integer.parseInt(p.get("ASSISTS")))
@@ -99,22 +91,20 @@ public class MatchService {
     }
 
     /**
-     * 파일명에서 숫자만 추출하여 MatchId 생성
+     * 파일명에서 MatchId 숫자만 추출
      */
     private String extractMatchIdFromFilename(String filename) {
-        return filename.replaceAll("[^0-9]", ""); // "KR-7610933923.rofl" → "7610933923"
+        return filename.replaceAll("[^0-9]", "");
     }
 
     /**
-     * ROFL 파일로부터 JSON을 파싱해온다
+     * ROFL 파일 내용을 JSON으로 변환
      */
     private Map<String, Object> parseRoflToJson(MultipartFile file) throws Exception {
         InputStream fileContent = file.getInputStream();
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] data = new byte[1024];
         int nRead;
-
-        // 파일 스트림 읽기
         while ((nRead = fileContent.read(data, 0, data.length)) != -1) {
             buffer.write(data, 0, nRead);
         }
@@ -122,7 +112,7 @@ public class MatchService {
         byte[] roflData = buffer.toByteArray();
         String roflString = new String(roflData, StandardCharsets.UTF_8);
 
-        // 게임 정보 JSON 블럭 찾기
+        // JSON 시작 위치 찾기
         String marker = "{\"gameLength\"";
         int pos = roflString.indexOf(marker);
 
@@ -130,7 +120,7 @@ public class MatchService {
             String jsonStr = roflString.substring(pos);
             Map<String, Object> parsed = objectMapper.readValue(jsonStr, new TypeReference<>() {});
 
-            // statsJson 필드를 다시 파싱해서 넣기
+            // statsJson 문자열을 파싱하여 다시 넣기
             String statsJsonRaw = (String) parsed.get("statsJson");
             List<Map<String, String>> statsParsed = objectMapper.readValue(statsJsonRaw, new TypeReference<>() {});
             parsed.put("statsJson", statsParsed);
@@ -142,19 +132,18 @@ public class MatchService {
     }
 
     /**
-     * 특정 플레이어의 모든 전적 조회 (닉네임+태그라인 or 닉네임만)
+     * 플레이어 전적 조회
      */
     @Transactional(readOnly = true)
     public List<PlayerStatsResponse> findMatchesByPlayer(String gameName, String tagLine, String sort) {
         List<Player> players;
 
-        // 닉네임+태그라인으로 플레이어 찾기
+        // 닉네임+태그라인으로 조회하거나, 닉네임만으로 조회
         if (tagLine != null && !tagLine.isBlank()) {
             Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(gameName, tagLine)
                     .orElseThrow(() -> new IllegalArgumentException("플레이어를 찾을 수 없습니다."));
             players = List.of(player);
         } else {
-            // 닉네임만으로 찾기
             players = playerRepository.findAllByRiotIdGameName(gameName);
             if (players.isEmpty()) {
                 throw new IllegalArgumentException("해당 닉네임의 플레이어가 없습니다.");
@@ -163,7 +152,6 @@ public class MatchService {
 
         return players.stream()
                 .map(player -> {
-                    // 매치 참가 정보 정렬해서 가져오기
                     List<MatchParticipant> parts = "asc".equalsIgnoreCase(sort)
                             ? matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeAsc(player)
                             : matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeDesc(player);
@@ -173,20 +161,17 @@ public class MatchService {
                     Map<Position, SummaryStats> byPosition = new HashMap<>();
                     List<PlayerMatchInfo> matches = new ArrayList<>();
 
+                    // 각 경기별 처리
                     for (MatchParticipant p : parts) {
-                        // 전체 요약 통계 누적
                         accumulate(summary, p);
 
-                        // 챔피언별 통계 누적
                         byChampion.computeIfAbsent(p.getChampion(), k -> new SummaryStats());
                         accumulate(byChampion.get(p.getChampion()), p);
 
-                        // 포지션별 통계 누적
                         Position pos = p.getPosition();
                         byPosition.computeIfAbsent(pos, k -> new SummaryStats());
                         accumulate(byPosition.get(pos), p);
 
-                        // 경기 기록 저장
                         Match match = p.getMatch();
                         List<MatchParticipant> participants = matchParticipantRepository.findAllByMatch(match);
 
@@ -196,12 +181,21 @@ public class MatchService {
                                 .build());
                     }
 
-                    // KDA 계산
+                    // 종합 스탯 계산
                     summary.setKda(calcKda(summary));
-                    byChampion.values().forEach(stat -> stat.setKda(calcKda(stat)));
-                    byPosition.values().forEach(stat -> stat.setKda(calcKda(stat)));
+                    calcAverageStats(summary);
 
-                    // 응답 객체 반환
+                    byChampion.values().forEach(stat -> {
+                        stat.setKda(calcKda(stat));
+                        calcAverageStats(stat);
+                    });
+
+                    byPosition.values().forEach(stat -> {
+                        stat.setKda(calcKda(stat));
+                        calcAverageStats(stat);
+                    });
+
+                    // 최종 응답 객체 생성
                     return PlayerStatsResponse.builder()
                             .gameName(player.getRiotIdGameName())
                             .tagLine(player.getRiotIdTagLine())
@@ -230,7 +224,7 @@ public class MatchService {
     }
 
     /**
-     * MatchId로 특정 매치 조회
+     * MatchId로 매치 상세 조회
      */
     @Transactional(readOnly = true)
     public MatchDetailResponse findMatchByMatchId(String matchId) {
@@ -238,7 +232,6 @@ public class MatchService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 matchId의 경기를 찾을 수 없습니다."));
 
         List<MatchParticipant> participants = matchParticipantRepository.findAllByMatch(match);
-
         return MatchDetailResponse.from(match, participants);
     }
 
@@ -253,7 +246,7 @@ public class MatchService {
     }
 
     /**
-     * 전적 누적 계산
+     * SummaryStats에 스탯 누적
      */
     private void accumulate(SummaryStats stats, MatchParticipant p) {
         if (stats == null || p == null) return;
@@ -270,18 +263,33 @@ public class MatchService {
     }
 
     /**
-     * null-safe Integer 변환
+     * Integer -> int null-safe 변환
      */
     private int safeInt(Integer value) {
         return value == null ? 0 : value;
     }
 
     /**
-     * KDA 계산
+     * KDA 수치 계산
      */
     private double calcKda(SummaryStats stat) {
         return stat.getDeaths() == 0
                 ? stat.getKills() + stat.getAssists()
                 : (double) (stat.getKills() + stat.getAssists()) / stat.getDeaths();
+    }
+
+    /**
+     * 판수로 평균 K/D/A 계산
+     */
+    private void calcAverageStats(SummaryStats stat) {
+        if (stat.getMatches() == 0) {
+            stat.setAvgKills(0);
+            stat.setAvgDeaths(0);
+            stat.setAvgAssists(0);
+            return;
+        }
+        stat.setAvgKills((double) stat.getKills() / stat.getMatches());
+        stat.setAvgDeaths((double) stat.getDeaths() / stat.getMatches());
+        stat.setAvgAssists((double) stat.getAssists() / stat.getMatches());
     }
 }
