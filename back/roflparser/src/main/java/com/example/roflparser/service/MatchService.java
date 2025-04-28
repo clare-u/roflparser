@@ -184,16 +184,20 @@ public class MatchService {
                     // 종합 스탯 계산
                     summary.setKda(calcKda(summary));
                     calcAverageStats(summary);
+                    summary.calcWinRate();
 
                     byChampion.values().forEach(stat -> {
                         stat.setKda(calcKda(stat));
                         calcAverageStats(stat);
+                        stat.calcWinRate();
                     });
 
                     byPosition.values().forEach(stat -> {
                         stat.setKda(calcKda(stat));
                         calcAverageStats(stat);
+                        stat.calcWinRate();
                     });
+
 
                     // 최종 응답 객체 생성
                     return PlayerStatsResponse.builder()
@@ -270,6 +274,8 @@ public class MatchService {
         stats.setKills(stats.getKills() + safeInt(p.getChampionsKilled()));
         stats.setDeaths(stats.getDeaths() + safeInt(p.getNumDeaths()));
         stats.setAssists(stats.getAssists() + safeInt(p.getAssists()));
+
+
     }
 
     /**

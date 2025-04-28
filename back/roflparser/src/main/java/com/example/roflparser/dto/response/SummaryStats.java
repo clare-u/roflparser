@@ -18,8 +18,21 @@ public class SummaryStats {
     private int deaths;      // 총 데스 수
     private int assists;     // 총 어시스트 수
     private double kda;      // KDA 수치
+    private Double winRate;  // 승률 (0.0 ~ 100.0)
 
     private double avgKills;    // 판당 평균 킬
     private double avgDeaths;   // 판당 평균 데스
     private double avgAssists;  // 판당 평균 어시스트
+
+    /**
+     * 총 전적을 바탕으로 승률을 계산합니다.
+     */
+    public void calcWinRate() {
+        if (matches > 0) {
+            this.winRate = (double) wins / matches * 100;
+        } else {
+            this.winRate = 0.0;
+        }
+    }
+
 }
