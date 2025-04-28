@@ -30,6 +30,7 @@ export interface SummaryStats {
   deaths: number;
   assists: number;
   kda: number;
+  winRate: number; // 승률 (ex: 66.66)
 
   // 평균 킬/데스/어시 (double)
   avgKills: number;
@@ -48,7 +49,7 @@ export interface PlayerStatsResponse {
   summary: SummaryStats;
   byChampion: Record<string, SummaryStats>;
   byPosition: Record<string, SummaryStats>;
-  matches: PlayerMatchInfo[]; // ← 기존 MatchResult[]에서 변경
+  matches: PlayerMatchInfo[];
 }
 
 export interface PlayerMatchInfo {

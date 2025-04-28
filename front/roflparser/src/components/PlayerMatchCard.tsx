@@ -37,7 +37,8 @@ const SummaryBox = ({
       </h4>
     </div>
     <p>
-      {stats.matches}전 {stats.wins}승 {stats.losses}패
+      {stats.matches}전 {stats.wins}승 {stats.losses}패{" "}
+      {stats.winRate.toFixed(2)}%
     </p>
     <p>
       KDA: {stats.avgKills.toFixed(1)} / {stats.avgDeaths.toFixed(1)} /{" "}
