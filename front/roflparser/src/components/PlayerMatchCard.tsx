@@ -5,6 +5,7 @@ import { useChampionMap, useGetPlayerPositions } from "@/hooks";
 import ChampionPortrait from "./ChampionPortrait";
 import Image from "next/image";
 import Loading from "./loading/Loading";
+import { mapPositionLabel } from "@/utils/position";
 
 interface Props {
   player: PlayerStatsResponse;
@@ -31,7 +32,9 @@ const SummaryBox = ({
           height={20}
         />
       ) : null}
-      <h4 className="font-bold text-gray-700">{title}</h4>
+      <h4 className="font-bold text-gray-700">
+        {typeof title === "string" ? mapPositionLabel(title) : title}
+      </h4>
     </div>
     <p>
       {stats.matches}전 {stats.wins}승 {stats.losses}패
@@ -45,11 +48,14 @@ const SummaryBox = ({
 
 const PlayerMatchCard: React.FC<Props> = ({ player }) => {
   const { championMap, loading, error } = useChampionMap();
-  const { data: playerPositions, isLoading: positionLoading } =
-    useGetPlayerPositions(player.gameName); // 추가
+  const {
+    data: playerPositions,
+    isLoading: positionLoading,
+    error: positionError,
+  } = useGetPlayerPositions(player.gameName);
 
   if (loading || positionLoading) return <Loading />;
-  if (error) return <div>오류 발생: {error}</div>;
+  if (error || positionError) return <div>오류 발생: {error}</div>;
 
   const orderedPositions = [
     "TOP",
@@ -79,11 +85,13 @@ const PlayerMatchCard: React.FC<Props> = ({ player }) => {
             <div key={position} className="p-4 flex items-center gap-2">
               <Image
                 src={`/position/${position}.svg`}
-                alt={position}
+                alt={mapPositionLabel(position)}
                 width={20}
                 height={20}
               />
-              <h4 className="font-bold text-gray-700">{position}</h4>
+              <h4 className="font-bold text-gray-700">
+                {mapPositionLabel(position)}
+              </h4>
               <span className="">
                 {playerPositions?.positions?.[position] ?? "미정"}
               </span>

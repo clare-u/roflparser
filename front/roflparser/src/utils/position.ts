@@ -16,3 +16,20 @@ export const getPositionKoreanName = (position: Position): string => {
       return "알 수 없는 포지션";
   }
 };
+
+export const mapPositionLabel = (position: string) => {
+  switch (position) {
+    case "TOP":
+      return "TOP";
+    case "JUNGLE":
+      return "JUG";
+    case "MIDDLE":
+      return "MID";
+    case "BOTTOM":
+      return "ADC";
+    case "UTILITY":
+      return "SUP";
+    default:
+      return position;
+  }
+};
