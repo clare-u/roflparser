@@ -5,7 +5,6 @@ import { useChampionMap, useGetPlayerPositions } from "@/hooks";
 import ChampionPortrait from "./ChampionPortrait";
 import Image from "next/image";
 import Loading from "./loading/Loading";
-import type { PositionKey } from "@/types";
 
 interface Props {
   player: PlayerStatsResponse;
