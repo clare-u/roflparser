@@ -41,8 +41,8 @@ const SummaryBox = ({
       {stats.winRate.toFixed(2)}%
     </p>
     <p>
-      KDA: {stats.avgKills.toFixed(1)} / {stats.avgDeaths.toFixed(1)} /{" "}
-      {stats.avgAssists.toFixed(1)} ({stats.kda.toFixed(2)})
+      KDA: {stats.avgKills.toFixed(1)} / {stats.avgDeaths.toFixed(1)} / {"("}
+      {stats.avgAssists.toFixed(1)} ({stats.kda.toFixed(2)}){")"}
     </p>
   </div>
 );
