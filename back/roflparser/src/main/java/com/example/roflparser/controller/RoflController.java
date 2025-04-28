@@ -86,10 +86,10 @@ public class RoflController {
         return ResponseEntity.ok(match);
     }
 
-    @Operation(summary = "닉네임으로 플레이어 목록 조회", description = "nickname과 일치하는 플레이어들의 태그라인 정보를 조회합니다.")
+    @Operation(summary = "닉네임으로 플레이어 목록 조회", description = "nickname과 일치하는 플레이어들의 태그라인 정보를 조회합니다. nickname이 없으면 전체 플레이어 목록을 반환합니다.")
     @GetMapping("/players")
     public ResponseEntity<List<PlayerSimpleResponse>> getPlayersByNickname(
-            @RequestParam String nickname
+            @RequestParam(required = false) String nickname
     ) {
         return ResponseEntity.ok(matchService.findPlayersByNickname(nickname));
     }

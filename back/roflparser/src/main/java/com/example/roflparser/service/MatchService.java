@@ -240,10 +240,19 @@ public class MatchService {
      */
     @Transactional(readOnly = true)
     public List<PlayerSimpleResponse> findPlayersByNickname(String nickname) {
-        return playerRepository.findAllByRiotIdGameName(nickname).stream()
-                .map(PlayerSimpleResponse::from)
-                .toList();
+        if (nickname == null || nickname.isBlank()) {
+            // nickname 없으면 전체 반환
+            return playerRepository.findAll().stream()
+                    .map(PlayerSimpleResponse::from)
+                    .toList();
+        } else {
+            // nickname 있으면 해당 nickname 검색
+            return playerRepository.findAllByRiotIdGameName(nickname).stream()
+                    .map(PlayerSimpleResponse::from)
+                    .toList();
+        }
     }
+
 
     /**
      * SummaryStats에 스탯 누적
