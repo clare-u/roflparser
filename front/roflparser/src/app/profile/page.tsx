@@ -9,7 +9,7 @@ export default function Profile() {
   if (isLoading)
     return (
       <div className="flex w-full max-w-[1200px] flex-col gap-[20px] py-[20px]">
-        <Loading />;
+        <Loading />
       </div>
     );
 

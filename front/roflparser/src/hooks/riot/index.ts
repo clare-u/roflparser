@@ -5,3 +5,4 @@ export * from "./useAccountByRiotIdEsports";
 export * from "./useActiveShardByGame";
 export * from "./useMatchById";
 export * from "./useMatchIdsByPuuid";
+export * from "./useChampionMap";

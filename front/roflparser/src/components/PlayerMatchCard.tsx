@@ -1,10 +1,11 @@
 import React from "react";
 import { PlayerStatsResponse, SummaryStats } from "@/types/rofl";
 import MatchCard from "./MatchCard";
-import { useChampionMap } from "@/hooks/riot/useChampionMap";
+import { useChampionMap, useGetPlayerPositions } from "@/hooks";
 import ChampionPortrait from "./ChampionPortrait";
 import Image from "next/image";
 import Loading from "./loading/Loading";
+import type { PositionKey } from "@/types";
 
 interface Props {
   player: PlayerStatsResponse;
@@ -27,8 +28,8 @@ const SummaryBox = ({
         <Image
           src={`/position/${title}.svg`}
           alt={String(title)}
-          width={15}
-          height={15}
+          width={20}
+          height={20}
         />
       ) : null}
       <h4 className="font-bold text-gray-700">{title}</h4>
@@ -45,9 +46,20 @@ const SummaryBox = ({
 
 const PlayerMatchCard: React.FC<Props> = ({ player }) => {
   const { championMap, loading, error } = useChampionMap();
+  const { data: playerPositions, isLoading: positionLoading } =
+    useGetPlayerPositions(player.gameName); // 추가
 
-  if (loading) return <Loading />;
+  if (loading || positionLoading) return <Loading />;
   if (error) return <div>오류 발생: {error}</div>;
+
+  const orderedPositions = [
+    "TOP",
+    "JUNGLE",
+    "MIDDLE",
+    "BOTTOM",
+    "UTILITY",
+  ] as const;
+  type PositionKey = (typeof orderedPositions)[number];
 
   return (
     <div className="border rounded-xl p-6 mb-6 shadow-md bg-gray-50">
@@ -55,19 +67,51 @@ const PlayerMatchCard: React.FC<Props> = ({ player }) => {
         {player.gameName} #{player.tagLine}
       </h2>
 
+      {/* 총 전적 */}
       <SummaryBox title="총 전적" stats={player.summary} />
 
+      {/* 라인별 내전 티어 */}
+      <div className="mt-6">
+        <h3 className="font-semibold text-lg mb-2 text-gray-800">
+          라인별 내전 티어
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3 border rounded-xl ">
+          {orderedPositions.map((position: PositionKey) => (
+            <div key={position} className="p-4 flex items-center gap-2">
+              <Image
+                src={`/position/${position}.svg`}
+                alt={position}
+                width={20}
+                height={20}
+              />
+              <h4 className="font-bold text-gray-700">{position}</h4>
+              <span className="">
+                {playerPositions?.positions?.[position] ?? "미정"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 라인별 전적 */}
       <div className="mt-4">
         <h3 className="font-semibold text-lg mb-2 text-gray-800">
           라인별 전적
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {Object.entries(player.byPosition).map(([position, stats]) => (
-            <SummaryBox key={position} title={position} stats={stats} />
-          ))}
+          {Object.entries(player.byPosition)
+            .sort(
+              ([a], [b]) =>
+                orderedPositions.indexOf(a as PositionKey) -
+                orderedPositions.indexOf(b as PositionKey)
+            )
+            .map(([position, stats]) => (
+              <SummaryBox key={position} title={position} stats={stats} />
+            ))}
         </div>
       </div>
 
+      {/* 챔피언별 전적 */}
       <div className="mt-4">
         <h3 className="font-semibold text-lg mb-2 text-gray-800">
           챔피언별 전적
@@ -91,6 +135,7 @@ const PlayerMatchCard: React.FC<Props> = ({ player }) => {
         </div>
       </div>
 
+      {/* 참여 경기 */}
       <div className="mt-6">
         <h3 className="font-semibold text-lg mb-3 text-gray-800">참여 경기</h3>
         {player.matches.map((matchInfo, idx) => (
