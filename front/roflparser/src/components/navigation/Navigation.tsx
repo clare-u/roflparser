@@ -7,6 +7,7 @@ import Image from "next/image";
 import NavigationItem from "./NavigationItem";
 import SearchInput from "../input/SearchInput";
 import { getPlayersByNickname } from "@/libs";
+import { toast } from "sonner";
 // import NavigationProfile from "./NavigationProfile";
 // import { useUserStore } from "@/store/userStore";
 // import { useFetchUser } from "@/hooks";
@@ -26,7 +27,7 @@ const Navigation = () => {
 
     // #이 포함된 경우는 그대로 사용
     if (trimmed.includes("#")) {
-      router.push(`/${encodeURIComponent(trimmed)}`);
+      router.push(`/profile/${encodeURIComponent(trimmed)}`);
       return;
     }
 
@@ -37,11 +38,11 @@ const Navigation = () => {
         const full = `${players[0].riotIdGameName}#${players[0].riotIdTagLine}`;
         router.push(`/${encodeURIComponent(full)}`);
       } else {
-        alert("해당 닉네임의 플레이어를 찾을 수 없습니다.");
+        toast.error("해당 닉네임의 플레이어를 찾을 수 없습니다.");
       }
     } catch (err) {
       console.error("플레이어 조회 실패", err);
-      alert("플레이어 조회 중 오류가 발생했습니다.");
+      toast.error("플레이어 조회 중 오류가 발생했습니다.");
     }
   };
 
@@ -74,7 +75,8 @@ const Navigation = () => {
       {/* 메뉴 영역 */}
       <div className="flex gap-[36px] p-10">
         <NavigationItem href="/recent">최근 전적</NavigationItem>
-        <NavigationItem href="/balance">밸런스</NavigationItem>
+        <NavigationItem href="/profile">프로필</NavigationItem>
+        <NavigationItem href="/team">팀 편성</NavigationItem>
       </div>
 
       {/* 프로필 영역 */}

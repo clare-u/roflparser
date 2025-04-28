@@ -3,7 +3,7 @@
 import { useState } from "react";
 import BalanceTable from "@/components/BalanceTable";
 
-export default function Balance() {
+export default function Team() {
   const [showTable, setShowTable] = useState(false);
 
   const toggleTable = () => {
