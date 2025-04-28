@@ -4,6 +4,7 @@ import MatchCard from "./MatchCard";
 import { useChampionMap } from "@/hooks/riot/useChampionMap";
 import ChampionPortrait from "./ChampionPortrait";
 import Image from "next/image";
+import Loading from "./loading/Loading";
 
 interface Props {
   player: PlayerStatsResponse;
@@ -45,7 +46,7 @@ const SummaryBox = ({
 const PlayerMatchCard: React.FC<Props> = ({ player }) => {
   const { championMap, loading, error } = useChampionMap();
 
-  if (loading) return <div>챔피언 데이터를 불러오는 중입니다...</div>;
+  if (loading) return <Loading />;
   if (error) return <div>오류 발생: {error}</div>;
 
   return (

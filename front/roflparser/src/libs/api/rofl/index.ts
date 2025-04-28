@@ -50,3 +50,11 @@ export const getPlayersByNickname = async (nickname: string) => {
     "get"
   );
 };
+
+/**
+ * 저장된 모든 플레이어 목록 조회하는 API
+ * - nickname 없이 전체 조회
+ */
+export const getAllPlayers = async () => {
+  return handleApiRequest<PlayerInfo[], "get">(`/api/players`, "get");
+};
