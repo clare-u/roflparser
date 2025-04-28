@@ -76,7 +76,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, win, championMap }) => {
                     nameMap={championMap}
                   />
                   <Link
-                    href={`/${encodedNickname}`}
+                    href={`/profile/${encodedNickname}`}
                     className="hover:underline text-black"
                   >
                     {player.riotIdGameName} #{player.riotIdTagLine}
@@ -113,7 +113,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, win, championMap }) => {
                     nameMap={championMap}
                   />
                   <Link
-                    href={`/${encodedNickname}`}
+                    href={`/profile/${encodedNickname}`}
                     className="hover:underline text-black"
                   >
                     {player.riotIdGameName} #{player.riotIdTagLine}
