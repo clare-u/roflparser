@@ -43,10 +43,13 @@ public class RoflController {
             @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
     })
     @PostMapping("/rofl/upload")
-    public ResponseEntity<?> uploadRoflFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadRoflFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader("Host") String host
+    ) {
         try {
             log.info("ROFL 업로드 시작: {}", file.getOriginalFilename());
-            matchService.handleRoflUpload(file);
+            matchService.handleRoflUpload(file, host);
             return ResponseEntity.ok("경기 업로드에 성공했습니다.");
         } catch (DuplicateMatchException e) {
             log.error("중복 매치 예외 발생: {}", file.getOriginalFilename(), e);
@@ -56,6 +59,7 @@ public class RoflController {
             return ResponseEntity.status(500).body("업로드 실패: " + e.getMessage());
         }
     }
+
 
     @Operation(summary = "플레이어 통계 조회", description = "닉네임만으로 검색 가능. tagline이 있는 경우 정확히 일치하는 플레이어만 조회됩니다.")
     @GetMapping("/matches/player")

@@ -28,7 +28,7 @@ public class Match {
     private LocalDateTime gameDatetime;
 
     @Column(name = "game_length")
-    private Long gameLength; // ▶️ Integer -> Long 변경
+    private Long gameLength; // Integer -> Long 변경
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "clan_id")

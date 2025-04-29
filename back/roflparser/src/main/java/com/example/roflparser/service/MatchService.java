@@ -1,11 +1,13 @@
 package com.example.roflparser.service;
 
+import com.example.roflparser.domain.Clan;
 import com.example.roflparser.domain.Match;
 import com.example.roflparser.domain.MatchParticipant;
 import com.example.roflparser.domain.Player;
 import com.example.roflparser.domain.type.Position;
 import com.example.roflparser.dto.response.*;
 import com.example.roflparser.exception.DuplicateMatchException;
+import com.example.roflparser.repository.ClanRepository;
 import com.example.roflparser.repository.MatchParticipantRepository;
 import com.example.roflparser.repository.MatchRepository;
 import com.example.roflparser.repository.PlayerRepository;
@@ -32,6 +34,7 @@ public class MatchService {
     private final MatchRepository matchRepository;
     private final PlayerRepository playerRepository;
     private final MatchParticipantRepository matchParticipantRepository;
+    private final ClanRepository clanRepository;
     private final ObjectMapper objectMapper = new ObjectMapper(); // JSON 파싱용
 
     /**
@@ -43,10 +46,26 @@ public class MatchService {
     }
 
     /**
+     * 도메인별로 클랜 id를 설정하는 함수 - 클랜이 늘어남에 따라 수기 작성 필요
+     */
+    private Long determineClanIdFromHost(String host) {
+        if (host == null) return 1L;
+        if (host.contains("roflbot.kro.kr")) return 1L;
+        if (host.contains("lolcode.kro.kr")) return 2L;
+        return 1L;
+    }
+
+    /**
      * ROFL 파일 업로드 및 저장
      */
     @Transactional
-    public void handleRoflUpload(MultipartFile file) throws Exception {
+    public void handleRoflUpload(MultipartFile file, String host) throws Exception {
+        Long clanId = determineClanIdFromHost(host);
+
+        // clanId를 기반으로 Clan 엔티티 조회
+        Clan clan = clanRepository.findById(clanId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 clanId(" + clanId + ")에 해당하는 클랜이 존재하지 않습니다."));
+
         String originalFilename = file.getOriginalFilename();
         String matchId = extractMatchIdFromFilename(originalFilename); // 파일명에서 matchId 추출
 
@@ -58,15 +77,15 @@ public class MatchService {
         Map<String, Object> json = parseRoflToJson(file); // 파일 JSON 파싱
 
         log.info("파일: {}, matchId: {}", originalFilename, matchId);
-        log.info("파싱된 JSON: {}", json);  // or objectMapper.writeValueAsString(json)
+        log.info("파싱된 JSON: {}", json);
         log.info("statsJson: {}", json.get("statsJson"));
-
 
         // Match 테이블 저장
         Match match = matchRepository.save(Match.builder()
                 .matchId(matchId)
                 .gameDatetime(uploadedAt)
                 .gameLength(((Number) json.get("gameLength")).longValue())
+                .clan(clan)
                 .build());
 
         // 참가자 목록 가져오기
@@ -74,21 +93,20 @@ public class MatchService {
 
         // 각 참가자 처리
         for (Map<String, String> p : participants) {
-            // 플레이어 존재하면 가져오고, 없으면 새로 저장
             Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(
                             p.get("RIOT_ID_GAME_NAME"), p.get("RIOT_ID_TAG_LINE"))
                     .orElseGet(() -> playerRepository.save(Player.builder()
                             .riotIdGameName(p.get("RIOT_ID_GAME_NAME"))
                             .riotIdTagLine(p.get("RIOT_ID_TAG_LINE"))
+                            .clan(clan)
                             .build()));
 
-            // MatchParticipant 저장
             matchParticipantRepository.save(MatchParticipant.builder()
                     .match(match)
                     .player(player)
                     .champion(p.get("SKIN"))
                     .team(p.get("TEAM"))
-                    .position(Position.valueOf(p.get("TEAM_POSITION"))) // Enum으로 변환
+                    .position(Position.valueOf(p.get("TEAM_POSITION")))
                     .win("Win".equalsIgnoreCase(p.get("WIN")))
                     .championsKilled(Integer.parseInt(p.get("CHAMPIONS_KILLED")))
                     .assists(Integer.parseInt(p.get("ASSISTS")))
@@ -96,6 +114,7 @@ public class MatchService {
                     .build());
         }
     }
+
 
     /**
      * 파일명에서 MatchId 숫자만 추출
