@@ -25,18 +25,19 @@ const Navigation = () => {
     const trimmed = value.trim();
     if (!trimmed) return;
 
-    // #이 포함된 경우는 그대로 사용
-    if (trimmed.includes("#")) {
-      router.push(`/profile/${encodeURIComponent(trimmed)}`);
+    // 내부 공백 모두 제거
+    const noSpaces = trimmed.replace(/\s+/g, "");
+
+    if (noSpaces.includes("#")) {
+      router.push(`/profile/${encodeURIComponent(noSpaces)}`);
       return;
     }
 
-    // # 없이 들어온 경우 -> API로 태그라인 조회
     try {
-      const players = await getPlayersByNickname(trimmed);
+      const players = await getPlayersByNickname(noSpaces);
       if (players.length > 0) {
         const full = `${players[0].riotIdGameName}#${players[0].riotIdTagLine}`;
-        router.push(`/${encodeURIComponent(full)}`);
+        router.push(`/profile/${encodeURIComponent(full)}`);
       } else {
         toast.error("해당 닉네임의 플레이어를 찾을 수 없습니다.");
       }

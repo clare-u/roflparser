@@ -8,12 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface MatchParticipantRepository extends JpaRepository<MatchParticipant, Long> {
-
-    // 특정 플레이어의 모든 경기 - 최신순 정렬
-    List<MatchParticipant> findAllByPlayerOrderByMatch_GameDatetimeDesc(Player player);
-
-    // 특정 플레이어의 모든 경기 - 오래된순 정렬
-    List<MatchParticipant> findAllByPlayerOrderByMatch_GameDatetimeAsc(Player player);
+    // 특정 플레이어의 모든 경기 - MatchId순 정렬
+    List<MatchParticipant> findAllByPlayerOrderByMatch_MatchIdDesc(Player player);
+    List<MatchParticipant> findAllByPlayerOrderByMatch_MatchIdAsc(Player player);
 
     // 전체 참가자 레코드 - 최신순 정렬
     List<MatchParticipant> findAllByOrderByMatch_GameDatetimeDesc();

@@ -59,4 +59,15 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
             @Param("riotIdGameName") String riotIdGameName,
             @Param("clanId") Long clanId
     );
-}
+
+    // 닉네임 검색 시 대소문자 구분 무시
+    @Query("""
+    SELECT p
+    FROM Player p
+    JOIN MatchParticipant mp ON mp.player = p
+    WHERE LOWER(p.riotIdGameName) = LOWER(:riotIdGameName) AND p.clan.id = :clanId
+    GROUP BY p
+    ORDER BY COUNT(mp) DESC
+    """)
+    List<Player> findAllByRiotIdGameNameIgnoreCaseAndClanIdHasMatchesOrderByMatchCountDesc(@Param("riotIdGameName") String riotIdGameName, @Param("clanId") Long clanId);
+    }

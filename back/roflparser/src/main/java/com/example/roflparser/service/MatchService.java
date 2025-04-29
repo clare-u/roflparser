@@ -181,28 +181,25 @@ public class MatchService {
         return -1;
     }
 
-
-
-
     /**
      * 플레이어 전적 조회 (도메인별 클랜 ID 적용)
      */
     @Transactional(readOnly = true)
     public List<PlayerStatsResponse> findMatchesByPlayer(String gameName, String tagLine, String sort, String host) {
-        Long clanId = determineClanIdFromHost(host); // 🔥 추가: host로 clanId 추출
+        Long clanId = determineClanIdFromHost(host); // 추가: host로 clanId 추출
         List<Player> players;
 
         // 닉네임+태그라인으로 조회하거나, 닉네임만으로 조회
         if (tagLine != null && !tagLine.isBlank()) {
             Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(gameName, tagLine)
                     .orElseThrow(() -> new IllegalArgumentException("플레이어를 찾을 수 없습니다."));
-            // ⚡ 태그라인까지 있는 경우에도 클랜 ID 확인
+            // 태그라인까지 있는 경우에도 클랜 ID 확인
             if (!player.getClan().getId().equals(clanId)) {
                 throw new IllegalArgumentException("해당 클랜 소속 플레이어가 아닙니다.");
             }
             players = List.of(player);
         } else {
-            players = playerRepository.findAllByRiotIdGameNameAndClanIdHasMatchesOrderByMatchCountDesc(gameName, clanId);
+            players = playerRepository.findAllByRiotIdGameNameIgnoreCaseAndClanIdHasMatchesOrderByMatchCountDesc(gameName, clanId);
             if (players.isEmpty()) {
                 throw new IllegalArgumentException("해당 닉네임의 플레이어가 없습니다.");
             }
@@ -211,8 +208,8 @@ public class MatchService {
         return players.stream()
                 .map(player -> {
                     List<MatchParticipant> parts = "asc".equalsIgnoreCase(sort)
-                            ? matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeAsc(player)
-                            : matchParticipantRepository.findAllByPlayerOrderByMatch_GameDatetimeDesc(player);
+                            ? matchParticipantRepository.findAllByPlayerOrderByMatch_MatchIdAsc(player)
+                            : matchParticipantRepository.findAllByPlayerOrderByMatch_MatchIdDesc(player);
 
                     SummaryStats summary = new SummaryStats();
                     Map<String, SummaryStats> byChampion = new HashMap<>();
@@ -265,7 +262,6 @@ public class MatchService {
                 })
                 .toList();
     }
-
 
     /**
      * 전체 매치 조회 (MatchId 기준 정렬)
