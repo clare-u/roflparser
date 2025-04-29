@@ -185,19 +185,24 @@ public class MatchService {
 
 
     /**
-     * 플레이어 전적 조회
+     * 플레이어 전적 조회 (도메인별 클랜 ID 적용)
      */
     @Transactional(readOnly = true)
-    public List<PlayerStatsResponse> findMatchesByPlayer(String gameName, String tagLine, String sort) {
+    public List<PlayerStatsResponse> findMatchesByPlayer(String gameName, String tagLine, String sort, String host) {
+        Long clanId = determineClanIdFromHost(host); // 🔥 추가: host로 clanId 추출
         List<Player> players;
 
         // 닉네임+태그라인으로 조회하거나, 닉네임만으로 조회
         if (tagLine != null && !tagLine.isBlank()) {
             Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(gameName, tagLine)
                     .orElseThrow(() -> new IllegalArgumentException("플레이어를 찾을 수 없습니다."));
+            // ⚡ 태그라인까지 있는 경우에도 클랜 ID 확인
+            if (!player.getClan().getId().equals(clanId)) {
+                throw new IllegalArgumentException("해당 클랜 소속 플레이어가 아닙니다.");
+            }
             players = List.of(player);
         } else {
-            players = playerRepository.findAllByRiotIdGameName(gameName);
+            players = playerRepository.findAllByRiotIdGameNameAndClanIdHasMatchesOrderByMatchCountDesc(gameName, clanId);
             if (players.isEmpty()) {
                 throw new IllegalArgumentException("해당 닉네임의 플레이어가 없습니다.");
             }
@@ -214,7 +219,6 @@ public class MatchService {
                     Map<Position, SummaryStats> byPosition = new HashMap<>();
                     List<PlayerMatchInfo> matches = new ArrayList<>();
 
-                    // 각 경기별 처리
                     for (MatchParticipant p : parts) {
                         accumulate(summary, p);
 
@@ -234,7 +238,6 @@ public class MatchService {
                                 .build());
                     }
 
-                    // 종합 스탯 계산
                     summary.setKda(calcKda(summary));
                     calcAverageStats(summary);
                     summary.calcWinRate();
@@ -251,8 +254,6 @@ public class MatchService {
                         stat.calcWinRate();
                     });
 
-
-                    // 최종 응답 객체 생성
                     return PlayerStatsResponse.builder()
                             .gameName(player.getRiotIdGameName())
                             .tagLine(player.getRiotIdTagLine())
@@ -265,11 +266,14 @@ public class MatchService {
                 .toList();
     }
 
+
     /**
      * 전체 매치 조회 (MatchId 기준 정렬)
      */
     @Transactional(readOnly = true)
-    public List<MatchDetailResponse> findAllMatches(String sort) {
+    public List<MatchDetailResponse> findAllMatches(String sort, String host) {
+        Long clanId = determineClanIdFromHost(host);
+
         List<Match> matches = "asc".equalsIgnoreCase(sort)
                 ? matchRepository.findAllByOrderByMatchIdAsc()
                 : matchRepository.findAllByOrderByMatchIdDesc();
@@ -284,8 +288,10 @@ public class MatchService {
      * MatchId로 매치 상세 조회
      */
     @Transactional(readOnly = true)
-    public MatchDetailResponse findMatchByMatchId(String matchId) {
-        Match match = matchRepository.findByMatchId(matchId)
+    public MatchDetailResponse findMatchByMatchId(String matchId, String host) {
+        Long clanId = determineClanIdFromHost(host);
+
+        Match match = matchRepository.findByMatchIdAndClanId(matchId, clanId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 matchId의 경기를 찾을 수 없습니다."));
 
         List<MatchParticipant> participants = matchParticipantRepository.findAllByMatch(match);
@@ -296,19 +302,21 @@ public class MatchService {
      * 닉네임으로 플레이어 목록 조회
      */
     @Transactional(readOnly = true)
-    public List<PlayerSimpleResponse> findPlayersByNickname(String nickname) {
+    public List<PlayerSimpleResponse> findPlayersByNickname(String nickname, String host) {
+        Long clanId = determineClanIdFromHost(host);
+
         if (nickname == null || nickname.isBlank()) {
-            // 닉네임 있으면 해당 닉네임 검색
-            return playerRepository.findAllHasMatchesOrderByMatchCountDesc().stream()
+            // 닉네임 없으면 클랜 소속 전체 플레이어 조회
+            return playerRepository.findAllByClanIdHasMatchesOrderByMatchCountDesc(clanId).stream()
                     .map(PlayerSimpleResponse::from)
                     .toList();
         } else {
-            // 닉네임 없으면 전체 반환
-            return playerRepository.findAllByRiotIdGameNameHasMatchesOrderByMatchCountDesc(nickname).stream()
+            return playerRepository.findAllByRiotIdGameNameAndClanIdHasMatchesOrderByMatchCountDesc(nickname, clanId).stream()
                     .map(PlayerSimpleResponse::from)
                     .toList();
         }
     }
+
 
 
 

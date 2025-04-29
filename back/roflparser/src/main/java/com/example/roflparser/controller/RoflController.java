@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -68,38 +69,44 @@ public class RoflController {
             @RequestParam(required = false)
             @Parameter(description = "플레이어 태그라인 (예: KR1). 선택값입니다.") String tagline,
             @RequestParam(required = false, defaultValue = "desc")
-            @Parameter(description = "정렬 순서 (asc=오래된순, desc=최신순)") String sort
+            @Parameter(description = "정렬 순서 (asc=오래된순, desc=최신순)") String sort,
+            HttpServletRequest request // 추가: HttpServletRequest 주입
     ) {
-        return ResponseEntity.ok(matchService.findMatchesByPlayer(nickname, tagline, sort));
+        String host = request.getHeader("Host"); // 요청 host 꺼내기
+        return ResponseEntity.ok(matchService.findMatchesByPlayer(nickname, tagline, sort, host));
     }
 
     @Operation(summary = "전체 경기 목록 조회", description = "저장된 모든 경기 정보를 세부사항과 함께 조회합니다. sort=asc 또는 desc (기본: desc)")
     @GetMapping("/matches")
     public ResponseEntity<List<MatchDetailResponse>> getAllMatches(
             @RequestParam(required = false, defaultValue = "desc")
-            @Parameter(description = "정렬 순서 (asc=오래된순, desc=최신순)") String sort
+            @Parameter(description = "정렬 순서 (asc=오래된순, desc=최신순)") String sort, HttpServletRequest request
     ) {
-        List<MatchDetailResponse> matches = matchService.findAllMatches(sort);
+        String host = request.getHeader("Host");
+        List<MatchDetailResponse> matches = matchService.findAllMatches(sort, host);
         return ResponseEntity.ok(matches);
     }
 
     @Operation(summary = "matchId로 경기 조회", description = "matchId를 기준으로 해당 경기의 세부 정보를 조회합니다.")
     @GetMapping("/matches/{matchId}")
     public ResponseEntity<MatchDetailResponse> getMatchById(
-            @Parameter(description = "matchId 예시: 7610933923", example = "7610933923")
-            @PathVariable String matchId
+            @PathVariable String matchId,
+            HttpServletRequest request
     ) {
-        MatchDetailResponse match = matchService.findMatchByMatchId(matchId);
-        return ResponseEntity.ok(match);
+        String host = request.getHeader("Host");
+        return ResponseEntity.ok(matchService.findMatchByMatchId(matchId, host));
     }
 
     @Operation(summary = "닉네임으로 플레이어 목록 조회", description = "nickname과 일치하는 플레이어들의 태그라인 정보를 조회합니다. nickname이 없으면 전체 플레이어 목록을 반환합니다.")
     @GetMapping("/players")
     public ResponseEntity<List<PlayerSimpleResponse>> getPlayersByNickname(
-            @RequestParam(required = false) String nickname
+            @RequestParam(required = false) String nickname,
+            HttpServletRequest request
     ) {
-        return ResponseEntity.ok(matchService.findPlayersByNickname(nickname));
+        String host = request.getHeader("Host");
+        return ResponseEntity.ok(matchService.findPlayersByNickname(nickname, host));
     }
+
 
 
 
