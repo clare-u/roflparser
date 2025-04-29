@@ -19,6 +19,8 @@ client.once("ready", () => {
 
 // !명령어
 client.on("messageCreate", (message) => {
+  if (message.author.bot) return;
+
   if (message.content === "!명령어") {
     message.reply(
       "**명령어 목록**\n" +
@@ -31,6 +33,8 @@ client.on("messageCreate", (message) => {
 
 // 코딩용 서버정보
 client.on("messageCreate", (message) => {
+  if (message.author.bot) return;
+
   if (message.content === "!서버정보") {
     message.reply(
       `서버 이름: ${message.guild?.name}\n서버 ID: ${message.guild?.id}`
@@ -38,10 +42,35 @@ client.on("messageCreate", (message) => {
   }
 });
 
+// 서버 이름과 ID를 매핑
+const SERVER = {
+  roflbot: "399480345239486478",
+  lolcode: "123456789012345678", // 예시
+};
+
+// 서버별로 Host 헤더를 다르게 적용하기 위한 매핑
+const GUILD_HOST_MAP = {
+  "399480345239486478": "roflbot.kro.kr",
+  "123456789012345678": "lolcode.kro.kr", // 예시
+};
+
 // !링크
+// 서버 ID별 링크 설정
+const SERVER_LINK = {
+  [SERVER.roflbot]: "https://roflbot.kro.kr",
+  [SERVER.lolcode]: "https://lolcode.kro.kr",
+};
+
 client.on("messageCreate", (message) => {
   if (message.content === "!링크") {
-    message.reply("https://roflbot.kro.kr");
+    const guildId = message.guild?.id;
+
+    const link = SERVER_LINK[guildId || ""];
+    if (link) {
+      message.reply(link);
+    } else {
+      message.reply("이 서버에 맞는 링크가 설정되지 않았습니다.");
+    }
   }
 });
 
@@ -50,18 +79,25 @@ client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
   if (message.content === "!최근") {
+    const guildId = message.guild?.id;
+    const host = GUILD_HOST_MAP[guildId] || "roflbot.kro.kr"; // 기본 호스트
+
     try {
-      const res = await axios.get("https://roflbot.kro.kr/api/matches");
+      const res = await axios.get("https://roflbot.kro.kr/api/matches", {
+        headers: {
+          Host: host,
+        },
+      });
       const matches = res.data;
 
       if (Array.isArray(matches) && matches.length > 0) {
-        const recent10 = matches.slice(0, 5);
+        const recent5 = matches.slice(0, 5);
 
         const embed = new EmbedBuilder()
           .setTitle("최근 5경기 전적 요약")
           .setColor("#7d9beb");
 
-        for (const match of recent10) {
+        for (const match of recent5) {
           const date = new Date(match.gameDatetime).toLocaleString("ko-KR");
           const lengthMin = Math.floor(match.gameLength / 60000);
           const lengthSec = Math.floor((match.gameLength % 60000) / 1000);
@@ -111,6 +147,8 @@ client.on("messageCreate", async (message) => {
 
 // !전적 닉네임
 const buildPlayerStatsEmbed = (playerData) => {
+  if (message.author.bot) return;
+
   const { gameName, tagLine, summary, byChampion, byPosition } = playerData;
 
   const embed = new EmbedBuilder()
@@ -188,12 +226,21 @@ client.on("messageCreate", async (message) => {
     }
 
     try {
+      const guildId = message.guild?.id;
+      const host = GUILD_HOST_MAP[guildId] || "roflbot.kro.kr";
+
       const res = await axios.get(
         `https://roflbot.kro.kr/api/matches/player?nickname=${encodeURIComponent(
           nickname
-        )}`
+        )}`,
+        {
+          headers: {
+            Host: host,
+          },
+        }
       );
-      const playerData = res.data[0]; // 배열의 첫 번째 요소 선택
+
+      const playerData = res.data[0];
 
       if (!playerData) {
         return message.reply(`'${nickname}'님의 전적 정보를 찾을 수 없습니다.`);
