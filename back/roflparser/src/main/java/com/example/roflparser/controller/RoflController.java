@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -41,15 +43,16 @@ public class RoflController {
             @ApiResponse(responseCode = "500", description = "서버 오류", content = @Content)
     })
     @PostMapping("/rofl/upload")
-    public ResponseEntity<?> uploadRoflFile(
-            @Parameter(description = ".rofl 리플레이 파일", required = true)
-            @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadRoflFile(@RequestParam("file") MultipartFile file) {
         try {
+            log.info("ROFL 업로드 시작: {}", file.getOriginalFilename());
             matchService.handleRoflUpload(file);
             return ResponseEntity.ok("경기 업로드에 성공했습니다.");
         } catch (DuplicateMatchException e) {
+            log.error("중복 매치 예외 발생: {}", file.getOriginalFilename(), e);
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
+            log.error("ROFL 업로드 실패: {}", file.getOriginalFilename(), e);
             return ResponseEntity.status(500).body("업로드 실패: " + e.getMessage());
         }
     }

@@ -15,7 +15,7 @@ public class MatchDetailResponse {
 
     private String matchId;
     private LocalDateTime gameDatetime;
-    private Integer gameLength;
+    private Long gameLength;
     private List<PlayerInfo> players;
 
     public static MatchDetailResponse from(Match match, List<MatchParticipant> participants) {

@@ -1,8 +1,8 @@
 package com.example.roflparser.domain;
 
 import jakarta.persistence.*;
-        import lombok.*;
-        import org.springframework.data.annotation.CreatedDate;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -28,7 +28,7 @@ public class Match {
     private LocalDateTime gameDatetime;
 
     @Column(name = "game_length")
-    private Integer gameLength;
+    private Long gameLength; // ▶️ Integer -> Long 변경
 
     @CreatedDate
     private LocalDateTime createdAt;

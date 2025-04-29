@@ -10,6 +10,7 @@ import com.example.roflparser.repository.MatchParticipantRepository;
 import com.example.roflparser.repository.MatchRepository;
 import com.example.roflparser.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MatchService {
@@ -55,11 +57,16 @@ public class MatchService {
         LocalDateTime uploadedAt = LocalDateTime.now(); // 업로드 시간 저장
         Map<String, Object> json = parseRoflToJson(file); // 파일 JSON 파싱
 
+        log.info("파일: {}, matchId: {}", originalFilename, matchId);
+        log.info("파싱된 JSON: {}", json);  // or objectMapper.writeValueAsString(json)
+        log.info("statsJson: {}", json.get("statsJson"));
+
+
         // Match 테이블 저장
         Match match = matchRepository.save(Match.builder()
                 .matchId(matchId)
                 .gameDatetime(uploadedAt)
-                .gameLength((Integer) json.get("gameLength"))
+                .gameLength(((Number) json.get("gameLength")).longValue())
                 .build());
 
         // 참가자 목록 가져오기
@@ -110,26 +117,53 @@ public class MatchService {
         }
 
         byte[] roflData = buffer.toByteArray();
-        String roflString = new String(roflData, StandardCharsets.UTF_8);
+        log.info("파일 전체 길이: {}", roflData.length);
 
-        // JSON 시작 위치 찾기
         String marker = "{\"gameLength\"";
-        int pos = roflString.indexOf(marker);
+        byte[] markerBytes = marker.getBytes(StandardCharsets.UTF_8);
 
-        if (pos >= 0) {
-            String jsonStr = roflString.substring(pos);
-            Map<String, Object> parsed = objectMapper.readValue(jsonStr, new TypeReference<>() {});
+        int pos = indexOf(roflData, markerBytes);
+        log.info("indexOf 끝났음, pos={}", pos);
 
-            // statsJson 문자열을 파싱하여 다시 넣기
+        if (pos == -1) {
+            log.error("파일 '{}' 에서 gameLength를 시작하는 JSON 블럭을 찾을 수 없습니다.", file.getOriginalFilename());
+            throw new IllegalArgumentException("ROFL 파일에서 JSON 블럭을 찾지 못했습니다.");
+        }
+
+        String roflString = new String(roflData, pos, roflData.length - pos, StandardCharsets.UTF_8);
+        log.info("부분 roflString 변환 끝");
+
+        try {
+            Map<String, Object> parsed = objectMapper.readValue(roflString, new TypeReference<>() {});
+
             String statsJsonRaw = (String) parsed.get("statsJson");
             List<Map<String, String>> statsParsed = objectMapper.readValue(statsJsonRaw, new TypeReference<>() {});
             parsed.put("statsJson", statsParsed);
 
+            log.info("JSON 파싱 성공: {}", parsed.keySet());
             return parsed;
-        } else {
-            throw new IllegalArgumentException("게임 JSON 블럭을 찾을 수 없습니다.");
+        } catch (Exception e) {
+            log.error("파일 '{}' 파싱 중 에러 발생: {}", file.getOriginalFilename(), e.getMessage());
+            throw new IllegalArgumentException("ROFL 파일 JSON 파싱 실패: " + e.getMessage());
         }
     }
+
+    // 추가
+    private int indexOf(byte[] data, byte[] target) {
+        outer:
+        for (int i = 0; i <= data.length - target.length; i++) {
+            for (int j = 0; j < target.length; j++) {
+                if (data[i + j] != target[j]) {
+                    continue outer;
+                }
+            }
+            return i;
+        }
+        return -1;
+    }
+
+
+
 
     /**
      * 플레이어 전적 조회
