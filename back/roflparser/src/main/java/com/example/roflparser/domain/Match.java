@@ -30,6 +30,11 @@ public class Match {
     @Column(name = "game_length")
     private Long gameLength; // ▶️ Integer -> Long 변경
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clan_id")
+    private Clan clan;
+
+
     @CreatedDate
     private LocalDateTime createdAt;
 

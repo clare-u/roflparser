@@ -29,6 +29,10 @@ public class Player {
     @Column(name = "riot_id_tag_line", length = 50, nullable = false)
     private String riotIdTagLine;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "clan_id")
+    private Clan clan;
+
     @CreatedDate
     private LocalDateTime createdAt;
 
