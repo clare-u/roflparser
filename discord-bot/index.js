@@ -147,8 +147,6 @@ client.on("messageCreate", async (message) => {
 
 // !전적 닉네임
 const buildPlayerStatsEmbed = (playerData) => {
-  if (message.author.bot) return;
-
   const { gameName, tagLine, summary, byChampion, byPosition } = playerData;
 
   const embed = new EmbedBuilder()
