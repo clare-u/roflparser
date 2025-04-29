@@ -29,6 +29,13 @@ client.on("messageCreate", (message) => {
   }
 });
 
+// 코딩용 서버정보
+if (message.content === "!서버정보") {
+  message.reply(
+    `서버 이름: ${message.guild?.name}\n서버 ID: ${message.guild?.id}`
+  );
+}
+
 // !링크
 client.on("messageCreate", (message) => {
   if (message.content === "!링크") {
