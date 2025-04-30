@@ -204,10 +204,10 @@ const buildPlayerStatsEmbed = (playerData) => {
                 }/${m.deaths}/${m.assists}`
             )
             .join("\n") || "최근 경기 없음",
-        inline: false,
+        inline: true,
       },
       {
-        name: "👥 팀워크 좋은 팀원",
+        name: "팀워크💙",
         value:
           bestTeamwork.length > 0
             ? bestTeamwork
@@ -219,10 +219,10 @@ const buildPlayerStatsEmbed = (playerData) => {
                 )
                 .join("\n")
             : "데이터 없음",
-        inline: false,
+        inline: true,
       },
       {
-        name: "💔 팀워크 안 좋은 팀원",
+        name: "팀워크💔",
         value:
           worstTeamwork.length > 0
             ? worstTeamwork
@@ -234,10 +234,10 @@ const buildPlayerStatsEmbed = (playerData) => {
                 )
                 .join("\n")
             : "데이터 없음",
-        inline: false,
+        inline: true,
       },
       {
-        name: "🌟 모스트픽",
+        name: "🌟 모스트픽 10",
         value:
           mostPlayedChampions.length > 0
             ? mostPlayedChampions
@@ -249,10 +249,10 @@ const buildPlayerStatsEmbed = (playerData) => {
                 )
                 .join("\n")
             : "데이터 없음",
-        inline: false,
+        inline: true,
       },
       {
-        name: "🧠 맞라인 강한 상대",
+        name: "맞라인👍",
         value:
           bestLaneOpponents.length > 0
             ? bestLaneOpponents
@@ -264,10 +264,10 @@ const buildPlayerStatsEmbed = (playerData) => {
                 )
                 .join("\n")
             : "데이터 없음",
-        inline: false,
+        inline: true,
       },
       {
-        name: "😱 맞라인 약한 상대",
+        name: "맞라인👎",
         value:
           worstLaneOpponents.length > 0
             ? worstLaneOpponents
@@ -279,7 +279,7 @@ const buildPlayerStatsEmbed = (playerData) => {
                 )
                 .join("\n")
             : "데이터 없음",
-        inline: false,
+        inline: true,
       }
     );
 
