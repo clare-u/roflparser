@@ -311,31 +311,33 @@ public class MatchService {
                             .build())
                     .toList();
 
-            // 팀워크 좋은/나쁜 10
+            // 팀워크 좋은 팀원 (5전 이상 + 승률 >= 50%)
             List<TeamworkStats> bestTeamwork = teamworkMap.values().stream()
-                    .filter(t -> t.getMatches() >= 5)
+                    .filter(t -> t.getMatches() >= 5 && t.getWinRate() >= 50.0)
                     .sorted((a, b) -> Double.compare(b.getWinRate(), a.getWinRate()))
                     .limit(10)
                     .map(TeamworkStatsAggregator::toDto)
                     .toList();
 
+            // 팀워크 안 좋은 팀원 (5전 이상 + 승률 < 50%)
             List<TeamworkStats> worstTeamwork = teamworkMap.values().stream()
-                    .filter(t -> t.getMatches() >= 5)
+                    .filter(t -> t.getMatches() >= 5 && t.getWinRate() < 50.0)
                     .sorted(Comparator.comparingDouble(TeamworkStatsAggregator::getWinRate))
                     .limit(10)
                     .map(TeamworkStatsAggregator::toDto)
                     .toList();
 
-            // 맞라인 좋은/나쁜 10
+            // 맞라인 강한 상대 (5전 이상 + 승률 >= 50%)
             List<OpponentStats> bestLaneOpponents = opponentMap.values().stream()
-                    .filter(o -> o.getMatches() >= 5)
+                    .filter(o -> o.getMatches() >= 5 && o.getWinRate() >= 50.0)
                     .sorted((a, b) -> Double.compare(b.getWinRate(), a.getWinRate()))
                     .limit(10)
                     .map(OpponentStatsAggregator::toDto)
                     .toList();
 
+            // 맞라인 약한 상대 (5전 이상 + 승률 < 50%)
             List<OpponentStats> worstLaneOpponents = opponentMap.values().stream()
-                    .filter(o -> o.getMatches() >= 5)
+                    .filter(o -> o.getMatches() >= 5 && o.getWinRate() < 50.0)
                     .sorted(Comparator.comparingDouble(OpponentStatsAggregator::getWinRate))
                     .limit(10)
                     .map(OpponentStatsAggregator::toDto)

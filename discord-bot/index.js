@@ -163,7 +163,7 @@ const buildPlayerStatsEmbed = (playerData) => {
   } = playerData;
 
   const embed = new EmbedBuilder()
-    .setTitle(`🔎 ${gameName} #${tagLine} 전적 요약`)
+    .setTitle(`🔎 ${gameName} #${tagLine}`)
     .setColor("#7d9beb")
     .addFields(
       {
@@ -237,7 +237,7 @@ const buildPlayerStatsEmbed = (playerData) => {
         inline: false,
       },
       {
-        name: "🌟 모스트픽 챔피언",
+        name: "🌟 모스트픽",
         value:
           mostPlayedChampions.length > 0
             ? mostPlayedChampions
