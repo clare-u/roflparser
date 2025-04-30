@@ -6,3 +6,4 @@ export * from "./useActiveShardByGame";
 export * from "./useMatchById";
 export * from "./useMatchIdsByPuuid";
 export * from "./useChampionMap";
+export * from "./useLatestLolVersion";

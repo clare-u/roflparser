@@ -1,6 +1,5 @@
-// riotAccount.ts
-
 import { handleRiotApiRequest, RIOT_API_SERVERS } from "../riotApi";
+import axios from "axios";
 
 /**
  * PUUID를 이용해 계정 정보 조회
@@ -60,6 +59,7 @@ export const getActiveShardByGameAndPuuid = async (
   const endpoint = `/riot/account/v1/active-shards/by-game/${game}/by-puuid/${puuid}`;
   return await handleRiotApiRequest(endpoint, RIOT_API_SERVERS.REGIONAL);
 };
+
 /**
  * PUUID를 이용해 최근 매치 ID 리스트 조회
  * @param puuid Riot PUUID
@@ -88,4 +88,14 @@ export const getMatchIdsByPuuid = async (
 export const getMatchByMatchId = async (matchId: string) => {
   const endpoint = `/lol/match/v5/matches/${matchId}`;
   return await handleRiotApiRequest(endpoint, RIOT_API_SERVERS.REGIONAL);
+};
+
+/**
+ * Data Dragon 버전 목록 조회 (최신 버전이 맨 앞)
+ */
+export const fetchLolVersions = async (): Promise<string[]> => {
+  const res = await axios.get<string[]>(
+    "https://ddragon.leagueoflegends.com/api/versions.json"
+  );
+  return res.data;
 };
