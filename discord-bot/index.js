@@ -147,109 +147,191 @@ client.on("messageCreate", async (message) => {
 
 // !전적 닉네임
 const buildPlayerStatsEmbed = (playerData) => {
-  const { gameName, tagLine, summary, byChampion, byPosition } = playerData;
+  const {
+    gameName,
+    tagLine,
+    summary,
+    monthlyStats,
+    byChampion,
+    byPosition,
+    recentMatches,
+    mostPlayedChampions,
+    bestTeamwork,
+    worstTeamwork,
+    bestLaneOpponents,
+    worstLaneOpponents,
+  } = playerData;
 
   const embed = new EmbedBuilder()
     .setTitle(`🔎 ${gameName} #${tagLine} 전적 요약`)
     .setColor("#7d9beb")
-    .setDescription(
-      `총 ${summary.matches}판 (${summary.wins}승 ${summary.losses}패)\n` +
-        `평균 KDA: ${summary.kda.toFixed(2)}`
+    .addFields(
+      {
+        name: "📆 이번달 전적",
+        value: `${monthlyStats.wins}승 / ${monthlyStats.winRate.toFixed(
+          2
+        )}% KDA: ${monthlyStats.kda.toFixed(2)}`,
+        inline: false,
+      },
+      {
+        name: "📊 통합 전적",
+        value: `${summary.matches}전 ${
+          summary.wins
+        }승 / ${summary.winRate.toFixed(2)}%`,
+        inline: false,
+      },
+      {
+        name: "🧭 포지션별 전적",
+        value:
+          Object.entries(byPosition)
+            .map(
+              ([position, stats]) =>
+                `**${position}**: ${stats.matches}판 ${stats.wins}승 ${
+                  stats.losses
+                }패 (KDA ${stats.kda.toFixed(2)})`
+            )
+            .join("\n") || "데이터 없음",
+        inline: false,
+      },
+      {
+        name: "🏹 최근 10경기",
+        value:
+          recentMatches
+            .map(
+              (m) =>
+                `${m.win ? ":blue_circle:" : ":red_circle:"} ${m.champion} ${
+                  m.kills
+                }/${m.deaths}/${m.assists}`
+            )
+            .join("\n") || "최근 경기 없음",
+        inline: false,
+      },
+      {
+        name: "👥 팀워크 좋은 팀원",
+        value:
+          bestTeamwork.length > 0
+            ? bestTeamwork
+                .map(
+                  (t) =>
+                    `${t.gameName}: ${t.wins}승/${
+                      t.losses
+                    }패 ${t.winRate.toFixed(2)}%`
+                )
+                .join("\n")
+            : "데이터 없음",
+        inline: false,
+      },
+      {
+        name: "💔 팀워크 안 좋은 팀원",
+        value:
+          worstTeamwork.length > 0
+            ? worstTeamwork
+                .map(
+                  (t) =>
+                    `${t.gameName}: ${t.wins}승/${
+                      t.losses
+                    }패 ${t.winRate.toFixed(2)}%`
+                )
+                .join("\n")
+            : "데이터 없음",
+        inline: false,
+      },
+      {
+        name: "🌟 모스트픽 챔피언",
+        value:
+          mostPlayedChampions.length > 0
+            ? mostPlayedChampions
+                .map(
+                  (c) =>
+                    `${c.champion}: ${c.matches}판 ${c.winRate.toFixed(
+                      2
+                    )}% KDA: ${c.kda.toFixed(2)}`
+                )
+                .join("\n")
+            : "데이터 없음",
+        inline: false,
+      },
+      {
+        name: "🧠 맞라인 강한 상대",
+        value:
+          bestLaneOpponents.length > 0
+            ? bestLaneOpponents
+                .map(
+                  (o) =>
+                    `${o.gameName}: ${o.wins}승/${
+                      o.losses
+                    }패 ${o.winRate.toFixed(2)}%`
+                )
+                .join("\n")
+            : "데이터 없음",
+        inline: false,
+      },
+      {
+        name: "😱 맞라인 약한 상대",
+        value:
+          worstLaneOpponents.length > 0
+            ? worstLaneOpponents
+                .map(
+                  (o) =>
+                    `${o.gameName}: ${o.wins}승/${
+                      o.losses
+                    }패 ${o.winRate.toFixed(2)}%`
+                )
+                .join("\n")
+            : "데이터 없음",
+        inline: false,
+      }
     );
-
-  // 챔피언별 통계
-  const championStats = Object.entries(byChampion)
-    .map(
-      ([champion, stats]) =>
-        `**${champion}**: ${stats.matches}판 ${stats.wins}승 ${
-          stats.losses
-        }패 (KDA ${stats.kda.toFixed(2)})`
-    )
-    .join("\n");
-
-  embed.addFields({
-    name: "🏆 챔피언별 전적",
-    value: championStats || "데이터 없음",
-  });
-
-  // 포지션별 통계
-  const positionStats = Object.entries(byPosition)
-    .map(
-      ([position, stats]) =>
-        `**${position}**: ${stats.matches}판 ${stats.wins}승 ${
-          stats.losses
-        }패 (KDA ${stats.kda.toFixed(2)})`
-    )
-    .join("\n");
-
-  embed.addFields({
-    name: "🧭 포지션별 전적",
-    value: positionStats || "데이터 없음",
-  });
-
-  // 최근 5전 전적
-  const recentMatches = playerData.matches.slice(0, 5); // 최근 5경기
-  const recentResults = recentMatches
-    .map((m) => {
-      const player = m.match.players.find(
-        (p) =>
-          p.riotIdGameName === playerData.gameName &&
-          p.riotIdTagLine === playerData.tagLine
-      );
-
-      if (!player) return "❓ 데이터 없음";
-
-      const resultEmoji = player.win ? "🏆승리🏆" : "✖️패배✖️";
-      return `${resultEmoji} ${player.position} - ${player.champion} (${player.kills}/${player.deaths}/${player.assists})`;
-    })
-    .join("\n");
-
-  embed.addFields({
-    name: "🕹️ 최근 5경기 상세",
-    value: recentResults || "데이터 없음",
-  });
 
   return embed;
 };
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
+  if (!message.content.startsWith("!전적")) return;
 
-  if (message.content.startsWith("!전적")) {
-    const args = message.content.split(" ");
-    const nickname = args.slice(1).join(" ");
+  const args = message.content.split(" ");
+  let nickname = args.slice(1).join(" ").trim();
 
-    if (!nickname) {
+  // 닉네임이 명시되지 않은 경우 → 디스코드 닉네임에서 추출
+  if (!nickname) {
+    const rawName = message.member?.displayName || message.author.username;
+
+    // "Code 닉네임 / 97" 또는 "닉네임 / 97" 또는 "닉네임"
+    const match = rawName.match(/(?:Code\s)?(.+?)(?:\s*\/\s*\d{2})?$/);
+    if (match && match[1]) {
+      nickname = match[1].trim();
+    } else {
       return message.reply("닉네임을 입력해주세요! 예: `!전적 Waterflower`");
     }
+  }
 
-    try {
-      const guildId = message.guild?.id;
-      const host = GUILD_HOST_MAP[guildId] || "roflbot.kro.kr";
+  try {
+    const guildId = message.guild?.id;
+    const host = GUILD_HOST_MAP[guildId] || "roflbot.kro.kr";
 
-      const res = await axios.get(
-        `https://roflbot.kro.kr/api/matches/player?nickname=${encodeURIComponent(
-          nickname
-        )}`,
-        {
-          headers: {
-            Host: host,
-          },
-        }
-      );
-
-      const playerData = res.data[0];
-
-      if (!playerData) {
-        return message.reply(`'${nickname}'님의 전적 정보를 찾을 수 없습니다.`);
+    const res = await axios.get(
+      `https://roflbot.kro.kr/api/matches/player?nickname=${encodeURIComponent(
+        nickname
+      )}`,
+      {
+        headers: {
+          Host: host,
+        },
       }
+    );
 
-      const embed = buildPlayerStatsEmbed(playerData);
-      await message.reply({ embeds: [embed] });
-    } catch (error) {
-      console.error("API 요청 실패:", error);
-      message.reply("전적 정보를 가져오는 중 오류가 발생했습니다.");
+    const playerData = res.data[0];
+
+    if (!playerData) {
+      return message.reply(`'${nickname}'님의 전적 정보를 찾을 수 없습니다.`);
     }
+
+    const embed = buildPlayerStatsEmbed(playerData);
+    await message.reply({ embeds: [embed] });
+  } catch (error) {
+    console.error("API 요청 실패:", error);
+    message.reply("전적 정보를 가져오는 중 오류가 발생했습니다.");
   }
 });
 
