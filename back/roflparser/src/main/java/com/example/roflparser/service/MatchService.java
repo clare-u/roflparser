@@ -11,6 +11,8 @@ import com.example.roflparser.repository.ClanRepository;
 import com.example.roflparser.repository.MatchParticipantRepository;
 import com.example.roflparser.repository.MatchRepository;
 import com.example.roflparser.repository.PlayerRepository;
+import com.example.roflparser.service.helper.OpponentStatsAggregator;
+import com.example.roflparser.service.helper.TeamworkStatsAggregator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -186,14 +189,12 @@ public class MatchService {
      */
     @Transactional(readOnly = true)
     public List<PlayerStatsResponse> findMatchesByPlayer(String gameName, String tagLine, String sort, String host) {
-        Long clanId = determineClanIdFromHost(host); // 추가: host로 clanId 추출
+        Long clanId = determineClanIdFromHost(host);
         List<Player> players;
 
-        // 닉네임+태그라인으로 조회하거나, 닉네임만으로 조회
         if (tagLine != null && !tagLine.isBlank()) {
             Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(gameName, tagLine)
                     .orElseThrow(() -> new IllegalArgumentException("플레이어를 찾을 수 없습니다."));
-            // 태그라인까지 있는 경우에도 클랜 ID 확인
             if (!player.getClan().getId().equals(clanId)) {
                 throw new IllegalArgumentException("해당 클랜 소속 플레이어가 아닙니다.");
             }
@@ -205,63 +206,159 @@ public class MatchService {
             }
         }
 
-        return players.stream()
-                .map(player -> {
-                    List<MatchParticipant> parts = "asc".equalsIgnoreCase(sort)
-                            ? matchParticipantRepository.findAllByPlayerOrderByMatch_MatchIdAsc(player)
-                            : matchParticipantRepository.findAllByPlayerOrderByMatch_MatchIdDesc(player);
+        return players.stream().map(player -> {
+            List<MatchParticipant> parts = "asc".equalsIgnoreCase(sort)
+                    ? matchParticipantRepository.findAllByPlayerOrderByMatch_MatchIdAsc(player)
+                    : matchParticipantRepository.findAllByPlayerOrderByMatch_MatchIdDesc(player);
 
-                    SummaryStats summary = new SummaryStats();
-                    Map<String, SummaryStats> byChampion = new HashMap<>();
-                    Map<Position, SummaryStats> byPosition = new HashMap<>();
-                    List<PlayerMatchInfo> matches = new ArrayList<>();
+            SummaryStats summary = new SummaryStats();
+            SummaryStats monthlyStats = new SummaryStats();
+            Map<String, SummaryStats> byChampion = new HashMap<>();
+            Map<Position, SummaryStats> byPosition = new HashMap<>();
+            List<PlayerMatchInfo> matches = new ArrayList<>();
+            List<RecentMatchSummary> recentMatches = new ArrayList<>();
 
-                    for (MatchParticipant p : parts) {
-                        accumulate(summary, p);
+            Map<String, TeamworkStatsAggregator> teamworkMap = new HashMap<>();
+            Map<String, OpponentStatsAggregator> opponentMap = new HashMap<>();
 
-                        byChampion.computeIfAbsent(p.getChampion(), k -> new SummaryStats());
-                        accumulate(byChampion.get(p.getChampion()), p);
+            YearMonth thisMonth = YearMonth.now();
 
-                        Position pos = p.getPosition();
-                        byPosition.computeIfAbsent(pos, k -> new SummaryStats());
-                        accumulate(byPosition.get(pos), p);
+            for (MatchParticipant p : parts) {
+                Match match = p.getMatch();
+                List<MatchParticipant> participants = matchParticipantRepository.findAllByMatch(match);
 
-                        Match match = p.getMatch();
-                        List<MatchParticipant> participants = matchParticipantRepository.findAllByMatch(match);
+                // 전적 누적
+                accumulate(summary, p);
+                Position pos = p.getPosition();
+                byChampion.computeIfAbsent(p.getChampion(), k -> new SummaryStats());
+                accumulate(byChampion.get(p.getChampion()), p);
 
-                        matches.add(PlayerMatchInfo.builder()
-                                .match(MatchDetailResponse.from(match, participants))
-                                .win(p.getWin())
-                                .build());
+                byPosition.computeIfAbsent(pos, k -> new SummaryStats());
+                accumulate(byPosition.get(pos), p);
+
+                // 이번달 전적
+                if (thisMonth.equals(YearMonth.from(match.getGameDatetime()))) {
+                    accumulate(monthlyStats, p);
+                }
+
+                // 최근 10경기
+                if (recentMatches.size() < 10) {
+                    recentMatches.add(RecentMatchSummary.builder()
+                            .win(p.getWin())
+                            .champion(p.getChampion())
+                            .kills(p.getChampionsKilled())
+                            .deaths(p.getNumDeaths())
+                            .assists(p.getAssists())
+                            .build());
+                }
+
+                // 팀워크 통계 수집
+                for (MatchParticipant other : participants) {
+                    if (other == p || !other.getTeam().equals(p.getTeam())) continue;
+
+                    String key = other.getPlayer().getRiotIdGameName() + "#" + other.getPlayer().getRiotIdTagLine();
+                    teamworkMap.computeIfAbsent(key, k -> new TeamworkStatsAggregator(other.getPlayer()));
+                    teamworkMap.get(key).addGame(p.getWin());
+                }
+
+                // 맞라인 통계 수집
+                for (MatchParticipant enemy : participants) {
+                    if (enemy == p || enemy.getTeam().equals(p.getTeam())) continue;
+
+                    if (enemy.getPosition() == p.getPosition()) {
+                        String key = enemy.getPlayer().getRiotIdGameName() + "#" + enemy.getPlayer().getRiotIdTagLine();
+                        opponentMap.computeIfAbsent(key, k -> new OpponentStatsAggregator(enemy.getPlayer()));
+                        opponentMap.get(key).addGame(p.getWin());
                     }
+                }
 
-                    summary.setKda(calcKda(summary));
-                    calcAverageStats(summary);
-                    summary.calcWinRate();
+                matches.add(PlayerMatchInfo.builder()
+                        .match(MatchDetailResponse.from(match, participants))
+                        .win(p.getWin())
+                        .build());
+            }
 
-                    byChampion.values().forEach(stat -> {
-                        stat.setKda(calcKda(stat));
-                        calcAverageStats(stat);
-                        stat.calcWinRate();
-                    });
+            // 계산
+            summary.setKda(calcKda(summary));
+            summary.calcWinRate();
+            calcAverageStats(summary);
 
-                    byPosition.values().forEach(stat -> {
-                        stat.setKda(calcKda(stat));
-                        calcAverageStats(stat);
-                        stat.calcWinRate();
-                    });
+            monthlyStats.setKda(calcKda(monthlyStats));
+            monthlyStats.calcWinRate();
+            calcAverageStats(monthlyStats);
 
-                    return PlayerStatsResponse.builder()
-                            .gameName(player.getRiotIdGameName())
-                            .tagLine(player.getRiotIdTagLine())
-                            .summary(summary)
-                            .byChampion(byChampion)
-                            .byPosition(byPosition)
-                            .matches(matches)
-                            .build();
-                })
-                .toList();
+            byChampion.values().forEach(stat -> {
+                stat.setKda(calcKda(stat));
+                calcAverageStats(stat);
+                stat.calcWinRate();
+            });
+
+            byPosition.values().forEach(stat -> {
+                stat.setKda(calcKda(stat));
+                calcAverageStats(stat);
+                stat.calcWinRate();
+            });
+
+            // 모스트 챔피언 상위 10
+            List<ChampionStats> mostPlayedChampions = byChampion.entrySet().stream()
+                    .sorted((a, b) -> b.getValue().getMatches() - a.getValue().getMatches())
+                    .limit(10)
+                    .map(entry -> ChampionStats.builder()
+                            .champion(entry.getKey())
+                            .matches(entry.getValue().getMatches())
+                            .winRate(entry.getValue().getWinRate())
+                            .kda(entry.getValue().getKda())
+                            .build())
+                    .toList();
+
+            // 팀워크 좋은/나쁜 10
+            List<TeamworkStats> bestTeamwork = teamworkMap.values().stream()
+                    .filter(t -> t.getMatches() >= 5)
+                    .sorted((a, b) -> Double.compare(b.getWinRate(), a.getWinRate()))
+                    .limit(10)
+                    .map(TeamworkStatsAggregator::toDto)
+                    .toList();
+
+            List<TeamworkStats> worstTeamwork = teamworkMap.values().stream()
+                    .filter(t -> t.getMatches() >= 5)
+                    .sorted(Comparator.comparingDouble(TeamworkStatsAggregator::getWinRate))
+                    .limit(10)
+                    .map(TeamworkStatsAggregator::toDto)
+                    .toList();
+
+            // 맞라인 좋은/나쁜 10
+            List<OpponentStats> bestLaneOpponents = opponentMap.values().stream()
+                    .filter(o -> o.getMatches() >= 5)
+                    .sorted((a, b) -> Double.compare(b.getWinRate(), a.getWinRate()))
+                    .limit(10)
+                    .map(OpponentStatsAggregator::toDto)
+                    .toList();
+
+            List<OpponentStats> worstLaneOpponents = opponentMap.values().stream()
+                    .filter(o -> o.getMatches() >= 5)
+                    .sorted(Comparator.comparingDouble(OpponentStatsAggregator::getWinRate))
+                    .limit(10)
+                    .map(OpponentStatsAggregator::toDto)
+                    .toList();
+
+            return PlayerStatsResponse.builder()
+                    .gameName(player.getRiotIdGameName())
+                    .tagLine(player.getRiotIdTagLine())
+                    .summary(summary)
+                    .monthlyStats(monthlyStats)
+                    .byChampion(byChampion)
+                    .byPosition(byPosition)
+                    .matches(matches)
+                    .recentMatches(recentMatches)
+                    .mostPlayedChampions(mostPlayedChampions)
+                    .bestTeamwork(bestTeamwork)
+                    .worstTeamwork(worstTeamwork)
+                    .bestLaneOpponents(bestLaneOpponents)
+                    .worstLaneOpponents(worstLaneOpponents)
+                    .build();
+        }).toList();
     }
+
 
     /**
      * 전체 매치 조회 (MatchId 기준 정렬)
