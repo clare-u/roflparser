@@ -13,9 +13,45 @@ const client = new Client({
   ],
 });
 
-client.once("ready", () => {
+client.once("ready", async () => {
+  await loadChampionMap();
   console.log("봇이 준비되었습니다!");
 });
+
+// 챔피언 한글 이름 매핑
+let championNameMap = {};
+const CHAMPION_KEY_EXCEPTIONS = {
+  FiddleSticks: "Fiddlesticks",
+}; // 피들스틱 예외처리
+
+const loadChampionMap = async () => {
+  try {
+    const versionRes = await axios.get(
+      "https://ddragon.leagueoflegends.com/api/versions.json"
+    );
+    const latestVersion = versionRes.data[0];
+
+    const champRes = await axios.get(
+      `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/data/ko_KR/champion.json`
+    );
+
+    const raw = champRes.data.data;
+    championNameMap = {};
+
+    for (const key in raw) {
+      championNameMap[key] = raw[key].name; // 예: Sett → 세트
+    }
+
+    console.log("✅ 챔피언 한글 이름 로딩 완료");
+  } catch (error) {
+    console.error("❌ 챔피언 이름 로딩 실패:", error);
+  }
+};
+
+const getKoreanChampionName = (key) => {
+  const correctedKey = CHAMPION_KEY_EXCEPTIONS[key] || key;
+  return championNameMap[correctedKey] || key;
+};
 
 // !명령어
 client.on("messageCreate", (message) => {
@@ -112,7 +148,9 @@ client.on("messageCreate", async (message) => {
             team
               .map((p) => {
                 const nameTag = `${p.riotIdGameName} #${p.riotIdTagLine}`;
-                return `**${nameTag}** ${p.champion} (${p.kills}/${p.deaths}/${p.assists})`;
+                return `**${nameTag}** ${getKoreanChampionName(p.champion)} (${
+                  p.kills
+                }/${p.deaths}/${p.assists})`;
               })
               .join("\n");
 
@@ -145,7 +183,7 @@ client.on("messageCreate", async (message) => {
   }
 });
 
-// !전적 닉네임
+// !전적 닉네임 or !전적
 const buildPlayerStatsEmbed = (playerData) => {
   const {
     gameName,
@@ -199,9 +237,11 @@ const buildPlayerStatsEmbed = (playerData) => {
           recentMatches
             .map(
               (m) =>
-                `${m.win ? ":blue_circle:" : ":red_circle:"} ${m.champion} ${
-                  m.kills
-                }/${m.deaths}/${m.assists}`
+                `${
+                  m.win ? ":blue_circle:" : ":red_circle:"
+                } ${getKoreanChampionName(m.champion)} ${m.kills}/${m.deaths}/${
+                  m.assists
+                }`
             )
             .join("\n") || "최근 경기 없음",
         inline: true,
@@ -243,9 +283,9 @@ const buildPlayerStatsEmbed = (playerData) => {
             ? mostPlayedChampions
                 .map(
                   (c) =>
-                    `${c.champion}: ${c.matches}판 ${c.winRate.toFixed(
-                      2
-                    )}% KDA: ${c.kda.toFixed(2)}`
+                    `${getKoreanChampionName(c.champion)}: ${
+                      c.matches
+                    }판 ${c.winRate.toFixed(2)}% KDA: ${c.kda.toFixed(2)}`
                 )
                 .join("\n")
             : "데이터 없음",
