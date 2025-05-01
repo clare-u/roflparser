@@ -382,10 +382,10 @@ client.on("messageCreate", async (message) => {
   // 봇이 보낸 메시지는 무시
   if (message.author.bot) return;
 
-  // 특정 채널에서만 작동
+  // 특정 서버에서만 작동
   if (
-    message.channel.id !== "123456789012345678" &&
-    message.channel.id !== "1365246914706149387"
+    message.guild.id !== "123456789012345678" &&
+    message.guild.id !== "1365246914706149387"
   )
     return;
 
