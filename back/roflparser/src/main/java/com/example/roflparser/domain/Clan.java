@@ -25,8 +25,8 @@ public class Clan {
     private String name;
 
     @CreatedDate
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @LastModifiedDate
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 }

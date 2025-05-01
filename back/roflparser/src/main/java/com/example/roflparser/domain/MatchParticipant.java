@@ -54,10 +54,10 @@ public class MatchParticipant {
     private Integer numDeaths;
 
     @CreatedDate
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @LastModifiedDate
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 
     private boolean deleted = false;
 
