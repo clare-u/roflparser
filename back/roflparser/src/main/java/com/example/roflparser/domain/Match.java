@@ -26,7 +26,7 @@ public class Match {
     private String matchId;
 
     @Column(name = "game_datetime")
-    private OffsetDateTime gameDatetime;
+    private LocalDateTime gameDatetime;
 
     @Column(name = "game_length")
     private Long gameLength; // Integer -> Long 변경
@@ -37,10 +37,10 @@ public class Match {
 
 
     @CreatedDate
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @LastModifiedDate
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     private boolean deleted = false;
 
