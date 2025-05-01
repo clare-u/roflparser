@@ -22,7 +22,7 @@ public class MatchDetailResponse {
     public static MatchDetailResponse from(Match match, List<MatchParticipant> participants) {
         return MatchDetailResponse.builder()
                 .matchId(match.getMatchId())
-                .gameDatetime(match.getGameDatetime())
+                .gameDatetime(OffsetDateTime.from(match.getGameDatetime()))
                 .gameLength(match.getGameLength())
                 .players(participants.stream()
                         .map(PlayerInfo::from)
