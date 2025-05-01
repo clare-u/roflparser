@@ -399,6 +399,8 @@ client.on("messageCreate", async (message) => {
     // 파일명 검증: code_0501_2015.rofl 형식
     if (!/^code_\d{4}_\d{4}\.rofl$/.test(fileName)) continue;
 
+    console.log("첨부 확인:", fileName, url);
+
     try {
       // 파일 다운로드
       await message.reply("✋ 파일 다운로드 중...");
