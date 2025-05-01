@@ -1,9 +1,12 @@
 package com.example.roflparser.controller;
 
+import com.example.roflparser.domain.PlayerNicknameHistory;
+import com.example.roflparser.dto.request.NicknameUpdateRequest;
 import com.example.roflparser.dto.response.MatchDetailResponse;
 import com.example.roflparser.dto.response.PlayerSimpleResponse;
 import com.example.roflparser.dto.response.PlayerStatsResponse;
 import com.example.roflparser.exception.DuplicateMatchException;
+import com.example.roflparser.repository.PlayerNicknameHistoryRepository;
 import com.example.roflparser.service.MatchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,6 +30,7 @@ import java.util.Map;
 public class RoflController {
 
     private final MatchService matchService;
+    private final PlayerNicknameHistoryRepository nicknameHistoryRepository;
 
     @Operation(summary = "ROFL 파일 파싱(디버깅용)", description = "ROFL 파일을 업로드하여 게임 정보를 JSON으로 반환합니다.")
     @PostMapping("/parse")
@@ -107,6 +111,50 @@ public class RoflController {
         return ResponseEntity.ok(matchService.findPlayersByNickname(nickname, host));
     }
 
+    @Operation(summary = "플레이어 닉네임 변경", description = "기존 게임 이름과 태그라인을 기준으로 플레이어 닉네임을 새 값으로 변경합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "닉네임 변경 성공"),
+            @ApiResponse(responseCode = "400", description = "입력 오류 또는 중복 닉네임"),
+            @ApiResponse(responseCode = "404", description = "기존 닉네임의 플레이어를 찾을 수 없음")
+    })
+    @PutMapping("/players/nickname")
+    public ResponseEntity<?> updateNickname(
+            @RequestBody NicknameUpdateRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        try {
+            String host = httpRequest.getHeader("Host");
+            matchService.updatePlayerNickname(
+                    request.getOldGameName(),
+                    request.getOldTagLine(),
+                    request.getNewGameName(),
+                    request.getNewTagLine(),
+                    host
+            );
+            return ResponseEntity.ok("닉네임이 성공적으로 변경되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @Operation(
+            summary = "플레이어 닉네임 변경 이력 조회",
+            description = "특정 플레이어의 닉네임 변경 내역을 최근 변경순으로 조회합니다."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "닉네임 변경 이력 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "해당 플레이어를 찾을 수 없음", content = @Content)
+    })
+    @GetMapping("/players/{playerId}/nickname-history")
+    public ResponseEntity<List<PlayerNicknameHistory>> getNicknameHistory(
+            @Parameter(description = "조회할 플레이어 ID", example = "1")
+            @PathVariable Long playerId
+    ) {
+        List<PlayerNicknameHistory> history = nicknameHistoryRepository
+                .findAllByPlayerIdOrderByChangedAtDesc(playerId);
+        return ResponseEntity.ok(history);
+
+    }
 
 
 

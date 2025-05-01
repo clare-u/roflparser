@@ -1,16 +1,10 @@
 package com.example.roflparser.service;
 
-import com.example.roflparser.domain.Clan;
-import com.example.roflparser.domain.Match;
-import com.example.roflparser.domain.MatchParticipant;
-import com.example.roflparser.domain.Player;
+import com.example.roflparser.domain.*;
 import com.example.roflparser.domain.type.Position;
 import com.example.roflparser.dto.response.*;
 import com.example.roflparser.exception.DuplicateMatchException;
-import com.example.roflparser.repository.ClanRepository;
-import com.example.roflparser.repository.MatchParticipantRepository;
-import com.example.roflparser.repository.MatchRepository;
-import com.example.roflparser.repository.PlayerRepository;
+import com.example.roflparser.repository.*;
 import com.example.roflparser.service.helper.OpponentStatsAggregator;
 import com.example.roflparser.service.helper.TeamworkStatsAggregator;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +32,7 @@ public class MatchService {
     private final MatchParticipantRepository matchParticipantRepository;
     private final ClanRepository clanRepository;
     private final ObjectMapper objectMapper = new ObjectMapper(); // JSON 파싱용
+    private final PlayerNicknameHistoryRepository nicknameHistoryRepository;
 
     /**
      * Swagger 테스트용 - ROFL 파일 파싱만 수행
@@ -116,7 +111,6 @@ public class MatchService {
                     .build());
         }
     }
-
 
     /**
      * 파일명에서 MatchId 숫자만 추출
@@ -361,6 +355,42 @@ public class MatchService {
                     .worstLaneOpponents(worstLaneOpponents)
                     .build();
         }).toList();
+    }
+
+    /**
+     * 닉네임 변경
+     */
+    @Transactional
+    public void updatePlayerNickname(String oldGameName, String oldTagLine, String newGameName, String newTagLine, String host) {
+        Long clanId = determineClanIdFromHost(host);
+
+        Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(oldGameName, oldTagLine)
+                .orElseThrow(() -> new IllegalArgumentException("기존 닉네임의 플레이어를 찾을 수 없습니다."));
+
+        if (!player.getClan().getId().equals(clanId)) {
+            throw new IllegalArgumentException("해당 클랜 소속의 플레이어가 아닙니다.");
+        }
+
+        // 동일한 새 닉네임이 이미 존재하는지 체크
+        Optional<Player> existing = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(newGameName, newTagLine);
+        if (existing.isPresent()) {
+            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
+        }
+
+        // 이력 저장
+        PlayerNicknameHistory history = PlayerNicknameHistory.builder()
+                .player(player)
+                .oldGameName(player.getRiotIdGameName())
+                .oldTagLine(player.getRiotIdTagLine())
+                .newGameName(newGameName)
+                .newTagLine(newTagLine)
+                .changedAt(LocalDateTime.now())
+                .build();
+
+        nicknameHistoryRepository.save(history);
+
+        player.setRiotIdGameName(newGameName);
+        player.setRiotIdTagLine(newTagLine);
     }
 
 

@@ -29,6 +29,14 @@ public class Player {
     @Column(name = "riot_id_tag_line", length = 50, nullable = false)
     private String riotIdTagLine;
 
+    public void setRiotIdGameName(String riotIdGameName) {
+        this.riotIdGameName = riotIdGameName;
+    }
+
+    public void setRiotIdTagLine(String riotIdTagLine) {
+        this.riotIdTagLine = riotIdTagLine;
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "clan_id")
     private Clan clan;
@@ -48,4 +56,5 @@ public class Player {
     public void restore() {
         this.deleted = false;
     }
+
 }
