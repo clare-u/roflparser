@@ -15,14 +15,14 @@ import java.util.stream.Collectors;
 public class MatchDetailResponse {
 
     private String matchId;
-    private OffsetDateTime gameDatetime;
+    private LocalDateTime gameDatetime;
     private Long gameLength;
     private List<PlayerInfo> players;
 
     public static MatchDetailResponse from(Match match, List<MatchParticipant> participants) {
         return MatchDetailResponse.builder()
                 .matchId(match.getMatchId())
-                .gameDatetime(OffsetDateTime.from(match.getGameDatetime()))
+                .gameDatetime(match.getGameDatetime())
                 .gameLength(match.getGameLength())
                 .players(participants.stream()
                         .map(PlayerInfo::from)
