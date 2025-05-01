@@ -1,5 +1,7 @@
 import dotenv from "dotenv";
 import axios from "axios";
+import fs from "fs";
+import FormData from "form-data";
 import { Client, GatewayIntentBits, EmbedBuilder } from "discord.js";
 
 dotenv.config();
@@ -373,6 +375,60 @@ client.on("messageCreate", async (message) => {
   } catch (error) {
     console.error("API 요청 실패:", error);
     message.reply("전적 정보를 가져오는 중 오류가 발생했습니다.");
+  }
+});
+
+// 리플레이 파일 업로드(코드클랜)
+client.on("messageCreate", async (message) => {
+  // 봇이 보낸 메시지는 무시
+  if (message.author.bot) return;
+
+  // 특정 채널에서만 작동
+  if (message.channel.id !== "123456789012345678" || "1365246914706149387")
+    return;
+
+  // 첨부파일이 없으면 무시
+  if (!message.attachments.size) return;
+
+  for (const attachment of message.attachments.values()) {
+    const fileName = attachment.name || "";
+    const url = attachment.url;
+
+    // 파일명 검증: code_0501_2015.rofl 형식
+    if (!/^code_\d{4}_\d{4}\.rofl$/.test(fileName)) continue;
+
+    try {
+      // 파일 다운로드
+      const response = await axios.get(url, { responseType: "stream" });
+
+      const form = new FormData();
+      form.append("file", response.data, fileName);
+
+      const host = GUILD_HOST_MAP[message.guild?.id || ""] || "lolcode.kro.kr";
+
+      const uploadRes = await axios.post(
+        "https://roflbot.kro.kr/api/rofl/upload/code",
+        form,
+        {
+          headers: {
+            ...form.getHeaders(),
+            Host: host,
+          },
+        }
+      );
+
+      await message.reply("✅ 전적 등록 성공!");
+    } catch (error) {
+      console.error("리플레이 업로드 실패:", error);
+
+      // 에러 메시지 추출 (AxiosError 타입이면 response.data 등에서 더 얻을 수도 있음)
+      const errorMsg =
+        error.response?.data?.message || error.message || "알 수 없는 오류";
+
+      await message.reply(
+        `❌ 업로드 중 오류가 발생했습니다.\n\`\`\`${errorMsg}\`\`\``
+      );
+    }
   }
 });
 

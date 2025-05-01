@@ -111,7 +111,76 @@ public class MatchService {
                     .build());
         }
     }
+    
+    /**
+     * Code 클랜 전용 업로드 및 저장
+     */
+    @Transactional
+    public void handleNewFormatRoflUpload(MultipartFile file) throws Exception {
+        String originalFilename = file.getOriginalFilename(); // 예: code_0501_2015.rofl
 
+        if (originalFilename == null || !originalFilename.matches("code_\\d{4}_\\d{4}\\.rofl")) {
+            throw new IllegalArgumentException("파일명이 올바른 형식이 아닙니다.");
+        }
+
+        // matchId는 확장자 제거
+        String matchId = originalFilename.replace(".rofl", ""); // code_0501_2015
+
+        if (matchRepository.existsByMatchId(matchId)) {
+            throw new DuplicateMatchException();
+        }
+
+        // 날짜 파싱
+        String[] parts = matchId.split("_"); // ["code", "0501", "2015"]
+        String monthDay = parts[1];
+        String hourMin = parts[2];
+
+        LocalDateTime gameDatetime = LocalDateTime.of(
+                LocalDate.now().getYear(),  // 올해 기준
+                Integer.parseInt(monthDay.substring(0, 2)), // month
+                Integer.parseInt(monthDay.substring(2, 4)), // day
+                Integer.parseInt(hourMin.substring(0, 2)),  // hour
+                Integer.parseInt(hourMin.substring(2, 4))   // minute
+        );
+
+        Map<String, Object> json = parseRoflToJson(file);
+
+        // Clan ID = 2 로 고정
+        Clan clan = clanRepository.findById(2L)
+                .orElseThrow(() -> new IllegalArgumentException("클랜 ID 2가 존재하지 않습니다."));
+
+        Match match = matchRepository.save(Match.builder()
+                .matchId(matchId)
+                .gameDatetime(gameDatetime)
+                .gameLength(((Number) json.get("gameLength")).longValue())
+                .clan(clan)
+                .build());
+
+        List<Map<String, String>> participants = (List<Map<String, String>>) json.get("statsJson");
+
+        for (Map<String, String> p : participants) {
+            Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(
+                            p.get("RIOT_ID_GAME_NAME"), p.get("RIOT_ID_TAG_LINE"))
+                    .orElseGet(() -> playerRepository.save(Player.builder()
+                            .riotIdGameName(p.get("RIOT_ID_GAME_NAME"))
+                            .riotIdTagLine(p.get("RIOT_ID_TAG_LINE"))
+                            .clan(clan)
+                            .build()));
+
+            matchParticipantRepository.save(MatchParticipant.builder()
+                    .match(match)
+                    .player(player)
+                    .champion(p.get("SKIN"))
+                    .team(p.get("TEAM"))
+                    .position(Position.valueOf(p.get("TEAM_POSITION")))
+                    .win("Win".equalsIgnoreCase(p.get("WIN")))
+                    .championsKilled(Integer.parseInt(p.get("CHAMPIONS_KILLED")))
+                    .assists(Integer.parseInt(p.get("ASSISTS")))
+                    .numDeaths(Integer.parseInt(p.get("NUM_DEATHS")))
+                    .build());
+        }
+    }
+    
     /**
      * 파일명에서 MatchId 숫자만 추출
      */

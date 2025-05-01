@@ -65,6 +65,21 @@ public class RoflController {
         }
     }
 
+    @Operation(summary = "Code 클랜 ROFL 파일 업로드", description = "code_0501_2015 형식의 파일을 업로드합니다.")
+    @PostMapping("/rofl/upload/code")
+    public ResponseEntity<?> uploadNewRoflFile(
+            @RequestParam("file") MultipartFile file
+    ) {
+        try {
+            log.info("새 클랜 ROFL 업로드 시작: {}", file.getOriginalFilename());
+            matchService.handleNewFormatRoflUpload(file);  // 새로운 메서드 호출
+            return ResponseEntity.ok("경기 업로드에 성공했습니다.");
+        } catch (DuplicateMatchException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("업로드 실패: " + e.getMessage());
+        }
+    }
 
     @Operation(summary = "플레이어 통계 조회", description = "닉네임만으로 검색 가능. tagline이 있는 경우 정확히 일치하는 플레이어만 조회됩니다.")
     @GetMapping("/matches/player")
