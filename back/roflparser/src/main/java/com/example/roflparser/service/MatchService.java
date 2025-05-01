@@ -81,14 +81,14 @@ public class MatchService {
         LocalDateTime uploadedAt = LocalDateTime.now(); // 업로드 시간 저장
         Map<String, Object> json = parseRoflToJson(file); // 파일 JSON 파싱
 
-        log.info("파일: {}, matchId: {}", originalFilename, matchId);
-        log.info("파싱된 JSON: {}", json);
-        log.info("statsJson: {}", json.get("statsJson"));
+        // log.info("파일: {}, matchId: {}", originalFilename, matchId);
+        // log.info("파싱된 JSON: {}", json);
+        // log.info("statsJson: {}", json.get("statsJson"));
 
         // Match 테이블 저장
         Match match = matchRepository.save(Match.builder()
                 .matchId(matchId)
-                .gameDatetime(OffsetDateTime.from(uploadedAt))
+                .gameDatetime(LocalDateTime.now())
                 .gameLength(((Number) json.get("gameLength")).longValue())
                 .clan(clan)
                 .build());
