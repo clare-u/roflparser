@@ -24,10 +24,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.YearMonth;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -88,7 +85,7 @@ public class MatchService {
         // Match 테이블 저장
         Match match = matchRepository.save(Match.builder()
                 .matchId(matchId)
-                .gameDatetime(LocalDateTime.now())
+                .gameDatetime(LocalDateTime.from(uploadedAt))
                 .gameLength(((Number) json.get("gameLength")).longValue())
                 .clan(clan)
                 .build());
@@ -237,15 +234,14 @@ public class MatchService {
                 byPosition.computeIfAbsent(pos, k -> new SummaryStats());
                 accumulate(byPosition.get(pos), p);
 
-                // 이번달 전적
-                YearMonth thisMonth = YearMonth.from(OffsetDateTime.now(ZoneId.of("Asia/Seoul")));
-                YearMonth gameMonth = YearMonth.from(match.getGameDatetime().atZoneSameInstant(ZoneId.of("Asia/Seoul")));
-
+                // LocalDateTime으로 저장된 gameDatetime → KST 기준 ZonedDateTime으로 변환
+                LocalDateTime gameDatetime = match.getGameDatetime();
+                YearMonth thisMonth = YearMonth.from(ZonedDateTime.now(ZoneId.of("Asia/Seoul")));
+                YearMonth gameMonth = YearMonth.from(gameDatetime.atZone(ZoneId.of("Asia/Seoul")));
 
                 if (thisMonth.equals(gameMonth)) {
                     accumulate(monthlyStats, p);
                 }
-
 
                 // 최근 10경기
                 if (recentMatches.size() < 10) {

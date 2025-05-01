@@ -35,10 +35,10 @@ public class Player {
     private Clan clan;
 
     @CreatedDate
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
     @LastModifiedDate
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     private boolean deleted = false;
 
