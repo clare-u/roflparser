@@ -25,7 +25,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -86,7 +88,7 @@ public class MatchService {
         // Match 테이블 저장
         Match match = matchRepository.save(Match.builder()
                 .matchId(matchId)
-                .gameDatetime(uploadedAt)
+                .gameDatetime(OffsetDateTime.from(uploadedAt))
                 .gameLength(((Number) json.get("gameLength")).longValue())
                 .clan(clan)
                 .build());
@@ -221,7 +223,6 @@ public class MatchService {
             Map<String, TeamworkStatsAggregator> teamworkMap = new HashMap<>();
             Map<String, OpponentStatsAggregator> opponentMap = new HashMap<>();
 
-            YearMonth thisMonth = YearMonth.now();
 
             for (MatchParticipant p : parts) {
                 Match match = p.getMatch();
@@ -237,9 +238,14 @@ public class MatchService {
                 accumulate(byPosition.get(pos), p);
 
                 // 이번달 전적
-                if (thisMonth.equals(YearMonth.from(match.getGameDatetime()))) {
+                YearMonth thisMonth = YearMonth.from(OffsetDateTime.now(ZoneId.of("Asia/Seoul")));
+                YearMonth gameMonth = YearMonth.from(match.getGameDatetime().atZoneSameInstant(ZoneId.of("Asia/Seoul")));
+
+
+                if (thisMonth.equals(gameMonth)) {
                     accumulate(monthlyStats, p);
                 }
+
 
                 // 최근 10경기
                 if (recentMatches.size() < 10) {

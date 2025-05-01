@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 public class MatchDetailResponse {
 
     private String matchId;
-    private LocalDateTime gameDatetime;
+    private OffsetDateTime gameDatetime;
     private Long gameLength;
     private List<PlayerInfo> players;
 
