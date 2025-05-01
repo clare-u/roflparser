@@ -398,6 +398,8 @@ client.on("messageCreate", async (message) => {
 
     try {
       // 파일 다운로드
+      await message.reply("✋ 파일 다운로드 중...");
+
       const response = await axios.get(url, { responseType: "stream" });
 
       const form = new FormData();
