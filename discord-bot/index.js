@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 import axios from "axios";
-import fs from "fs";
 import FormData from "form-data";
 import { Client, GatewayIntentBits, EmbedBuilder } from "discord.js";
 
