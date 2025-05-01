@@ -4,6 +4,8 @@ import com.example.roflparser.domain.Match;
 import com.example.roflparser.domain.MatchParticipant;
 import com.example.roflparser.domain.Player;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -20,4 +22,9 @@ public interface MatchParticipantRepository extends JpaRepository<MatchParticipa
 
     // 특정 경기의 모든 참가자
     List<MatchParticipant> findAllByMatch(Match match);
+
+    // clan 별로 경기 가져오기
+    @Query("SELECT DISTINCT mp.match.id FROM MatchParticipant mp WHERE mp.player.clan.id = :clanId")
+    List<Long> findDistinctMatchIdsByPlayerClanId(@Param("clanId") Long clanId);
+
 }

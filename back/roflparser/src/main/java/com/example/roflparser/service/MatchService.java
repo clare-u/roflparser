@@ -470,13 +470,18 @@ public class MatchService {
     public List<MatchDetailResponse> findAllMatches(String sort, String host) {
         Long clanId = determineClanIdFromHost(host);
 
+        // 해당 클랜 소속 플레이어가 참가한 매치 ID만 가져옴
+        List<Long> matchIds = matchParticipantRepository.findDistinctMatchIdsByPlayerClanId(clanId);
+
         List<Match> matches = "asc".equalsIgnoreCase(sort)
-                ? matchRepository.findAllByOrderByMatchIdAsc()
-                : matchRepository.findAllByOrderByMatchIdDesc();
+                ? matchRepository.findAllByIdInOrderByMatchIdAsc(matchIds)
+                : matchRepository.findAllByIdInOrderByMatchIdDesc(matchIds);
 
         return matches.stream()
                 .map(match -> MatchDetailResponse.from(
-                        match, matchParticipantRepository.findAllByMatch(match)))
+                        match,
+                        matchParticipantRepository.findAllByMatch(match)
+                ))
                 .collect(Collectors.toList());
     }
 

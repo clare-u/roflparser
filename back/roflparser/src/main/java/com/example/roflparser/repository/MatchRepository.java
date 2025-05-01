@@ -27,4 +27,8 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     // matchId + clanId로 조회 (클랜별 match 조회용)
     Optional<Match> findByMatchIdAndClanId(String matchId, Long clanId);
 
+    // clanId - MatchId 순 최신순, 오래된순 정렬
+    List<Match> findAllByIdInOrderByMatchIdAsc(List<Long> ids);
+    List<Match> findAllByIdInOrderByMatchIdDesc(List<Long> ids);
+    
 }
