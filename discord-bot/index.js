@@ -54,22 +54,7 @@ const getKoreanChampionName = (key) => {
   return championNameMap[correctedKey] || key;
 };
 
-// !명령어
-client.on("messageCreate", (message) => {
-  if (message.author.bot) return;
-
-  if (message.content === "!명령어") {
-    message.reply(
-      "**명령어 목록**\n" +
-        "`!최근` - 최근 5경기 요약 보기\n" +
-        "`!링크` - 사이트 링크 받기\n" +
-        "`!전적` - 디스코드 닉네임으로 검색하여 플레이어 요약 정보 보기\n" +
-        "`!전적 <닉네임>` - 플레이어 요약 정보 보기"
-    );
-  }
-});
-
-// 코딩용 서버정보
+///////////////////// 코딩용 서버정보
 client.on("messageCreate", (message) => {
   if (message.author.bot) return;
 
@@ -83,16 +68,34 @@ client.on("messageCreate", (message) => {
 // 서버 이름과 ID를 매핑
 const SERVER = {
   roflbot: "399480345239486478",
-  lolcode: "123456789012345678", // 예시
+  lolcode: "278523753489760256", // TODO: 알맞은 ID로 변경
 };
 
 // 서버별로 Host 헤더를 다르게 적용하기 위한 매핑
 const GUILD_HOST_MAP = {
   "399480345239486478": "roflbot.kro.kr",
-  "123456789012345678": "lolcode.kro.kr", // 예시
+  "278523753489760256": "lolcode.kro.kr", // 예시
 };
 
-// !링크
+///////////////////// !명령어
+client.on("messageCreate", (message) => {
+  if (message.author.bot) return;
+
+  // TODO: 추후 제거
+  if (message.guild.id === SERVER.lolcode) return;
+
+  if (message.content === "!명령어") {
+    message.reply(
+      "**명령어 목록**\n" +
+        "`!최근` - 최근 5경기 요약 보기\n" +
+        "`!링크` - 사이트 링크 받기\n" +
+        "`!전적` - 디스코드 닉네임으로 검색하여 플레이어 요약 정보 보기\n" +
+        "`!전적 <닉네임>` - 플레이어 요약 정보 보기"
+    );
+  }
+});
+
+///////////////////// !링크
 // 서버 ID별 링크 설정
 const SERVER_LINK = {
   [SERVER.roflbot]: "https://roflbot.kro.kr",
@@ -100,6 +103,11 @@ const SERVER_LINK = {
 };
 
 client.on("messageCreate", (message) => {
+  if (message.author.bot) return;
+
+  // TODO: 추후 제거
+  if (message.guild.id === SERVER.lolcode) return;
+
   if (message.content === "!링크") {
     const guildId = message.guild?.id;
 
@@ -112,9 +120,12 @@ client.on("messageCreate", (message) => {
   }
 });
 
-// !최근
+///////////////////// !최근
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
+
+  // TODO: 추후 제거
+  if (message.guild.id === SERVER.lolcode) return;
 
   if (message.content === "!최근") {
     const guildId = message.guild?.id;
@@ -185,7 +196,7 @@ client.on("messageCreate", async (message) => {
   }
 });
 
-// !전적 닉네임 or !전적
+///////////////////// !전적 닉네임 or !전적
 const buildPlayerStatsEmbed = (playerData) => {
   const {
     gameName,
@@ -330,6 +341,10 @@ const buildPlayerStatsEmbed = (playerData) => {
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
+
+  // TODO: 추후 제거
+  if (message.guild.id === SERVER.lolcode) return;
+
   if (!message.content.startsWith("!전적")) return;
 
   const args = message.content.split(" ");
@@ -377,12 +392,13 @@ client.on("messageCreate", async (message) => {
   }
 });
 
-// 리플레이 파일 업로드(코드클랜)
+///////////////////// 리플레이 파일 업로드(코드클랜)
 client.on("messageCreate", async (message) => {
   // 봇이 보낸 메시지는 무시
   if (message.author.bot) return;
 
   // 특정 서버에서만 작동
+  // TODO: 코드에 맞는걸로 변경
   if (
     message.guild.id !== "123456789012345678" &&
     message.guild.id !== "1365246914706149387"
