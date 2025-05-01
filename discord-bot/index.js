@@ -383,7 +383,10 @@ client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
   // 특정 채널에서만 작동
-  if (message.channel.id !== "123456789012345678" || "1365246914706149387")
+  if (
+    message.channel.id !== "123456789012345678" &&
+    message.channel.id !== "1365246914706149387"
+  )
     return;
 
   // 첨부파일이 없으면 무시
