@@ -400,7 +400,7 @@ client.on("messageCreate", async (message) => {
   // 특정 서버에서만 작동
   // TODO: 코드에 맞는걸로 변경
   if (
-    message.guild.id !== "123456789012345678" &&
+    message.guild.id !== "278523753489760256" &&
     message.guild.id !== "1365246914706149387"
   )
     return;
