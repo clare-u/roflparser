@@ -1,6 +1,7 @@
 package com.example.roflparser.repository;
 
 import com.example.roflparser.domain.Player;
+import com.example.roflparser.repository.custom.PlayerRepositoryCustom;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -8,8 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface PlayerRepository extends JpaRepository<Player, Long> {
-
+public interface PlayerRepository extends JpaRepository<Player, Long>, PlayerRepositoryCustom {
     Optional<Player> findByRiotIdGameNameAndRiotIdTagLine(String riotIdGameName, String riotIdTagLine);
     List<Player> findAllByRiotIdGameName(String riotIdGameName);
 

@@ -3,13 +3,15 @@ package com.example.roflparser.repository;
 import com.example.roflparser.domain.Match;
 import com.example.roflparser.domain.MatchParticipant;
 import com.example.roflparser.domain.Player;
+import com.example.roflparser.repository.custom.MatchParticipantRepositoryCustom;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface MatchParticipantRepository extends JpaRepository<MatchParticipant, Long> {
+public interface MatchParticipantRepository extends JpaRepository<MatchParticipant, Long>, MatchParticipantRepositoryCustom {
+
     // 특정 플레이어의 모든 경기 - MatchId순 정렬
     List<MatchParticipant> findAllByPlayerOrderByMatch_MatchIdDesc(Player player);
     List<MatchParticipant> findAllByPlayerOrderByMatch_MatchIdAsc(Player player);
