@@ -234,6 +234,26 @@ const buildPlayerStatsEmbed = (playerData) => {
     worstLaneOpponents,
   } = playerData;
 
+  const POSITION_LABEL_MAP = {
+    TOP: "TOP",
+    JUNGLE: "JUG",
+    MIDDLE: "MID",
+    BOTTOM: "ADC",
+    UTILITY: "SUP",
+  };
+
+  const POSITION_ORDER = ["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"];
+
+  const sortedPositionStats = POSITION_ORDER.filter(
+    (key) => byPosition[key]
+  ).map((position) => {
+    const stats = byPosition[position];
+    const label = POSITION_LABEL_MAP[position] || position;
+    return `**${label}**: ${stats.matches}판 ${stats.wins}승 ${
+      stats.losses
+    }패 (KDA ${stats.kda.toFixed(2)})`;
+  });
+
   const embed = new EmbedBuilder()
     .setTitle(`🔎 ${gameName} #${tagLine}`)
     .setColor("#7d9beb")
@@ -254,15 +274,7 @@ const buildPlayerStatsEmbed = (playerData) => {
       },
       {
         name: "🧭 포지션별 전적",
-        value:
-          Object.entries(byPosition)
-            .map(
-              ([position, stats]) =>
-                `**${position}**: ${stats.matches}판 ${stats.wins}승 ${
-                  stats.losses
-                }패 (KDA ${stats.kda.toFixed(2)})`
-            )
-            .join("\n") || "데이터 없음",
+        value: sortedPositionStats.join("\n") || "데이터 없음",
         inline: false,
       },
       {
