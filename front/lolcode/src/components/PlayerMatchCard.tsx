@@ -77,7 +77,7 @@ const PlayerMatchCard: React.FC<Props> = ({ player }) => {
       <SummaryBox title="총 전적" stats={player.summary} />
 
       {/* 라인별 내전 티어 */}
-      <div className="mt-6">
+      {/* <div className="mt-6">
         <h3 className="font-semibold text-lg mb-2 text-gray-800">
           라인별 내전 티어
         </h3>
@@ -99,7 +99,7 @@ const PlayerMatchCard: React.FC<Props> = ({ player }) => {
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* 라인별 전적 */}
       <div className="mt-4">

@@ -39,13 +39,10 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, win, championMap }) => {
     <div className={`border rounded-xl p-4 mb-4 shadow-lg ${matchBgColor}`}>
       <div className="mb-2 flex justify-between">
         <div className="font-semibold">
-          KR-{match.matchId} ⏱{formatGameLength(match.gameLength)}
-        </div>
-        <div className="text-sm">
-          업로드:{" "}
           {new Date(match.gameDatetime).toLocaleString("ko-KR", {
             timeZone: "Asia/Seoul",
-          })}
+          })}{" "}
+          ⏱{formatGameLength(match.gameLength)}
         </div>
       </div>
 
