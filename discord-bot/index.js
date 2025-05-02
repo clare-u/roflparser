@@ -631,8 +631,8 @@ client.on("messageCreate", async (message) => {
     const fileName = attachment.name || "";
     const url = attachment.url;
 
-    // 파일명 검증: code_0501_2015.rofl 형식
-    if (!/^code_\d{4}_\d{4}\.rofl$/.test(fileName)) continue;
+    // 파일명 검증: code_0501_2015.rofl 형식 (대소문자 구분 x)
+    if (!/^code_\d{4}_\d{4}\.rofl$/i.test(fileName)) continue;
 
     console.log("첨부 확인:", fileName, url);
 

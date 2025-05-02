@@ -118,7 +118,7 @@ public class MatchService {
      */
     @Transactional
     public void handleNewFormatRoflUpload(MultipartFile file) throws Exception {
-        String originalFilename = file.getOriginalFilename(); // 예: code_0501_2015.rofl
+        String originalFilename = file.getOriginalFilename().toLowerCase(); // 예: code_0501_2015.rofl
 
         if (originalFilename == null || !originalFilename.matches("code_\\d{4}_\\d{4}\\.rofl")) {
             throw new IllegalArgumentException("파일명이 올바른 형식이 아닙니다.");
