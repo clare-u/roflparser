@@ -263,7 +263,7 @@ public class MatchService {
             }
             players = List.of(player);
         } else {
-            players = playerRepository.findAllByRiotIdGameNameIgnoreCaseAndClanIdHasMatchesOrderByMatchCountDesc(gameName, clanId);
+            players = playerRepository.findAllByRiotIdGameNameLikeAndClanIdHasMatchesOrderByMatchCountDesc(gameName, clanId);
             if (players.isEmpty()) {
                 throw new IllegalArgumentException("해당 닉네임의 플레이어가 없습니다.");
             }

@@ -70,4 +70,21 @@ public interface PlayerRepository extends JpaRepository<Player, Long>, PlayerRep
     ORDER BY COUNT(mp) DESC
     """)
     List<Player> findAllByRiotIdGameNameIgnoreCaseAndClanIdHasMatchesOrderByMatchCountDesc(@Param("riotIdGameName") String riotIdGameName, @Param("clanId") Long clanId);
-    }
+
+    // 닉네임 검색 시 Like 검색
+    @Query("""
+    SELECT p
+    FROM Player p
+    JOIN MatchParticipant mp ON mp.player = p
+    WHERE LOWER(p.riotIdGameName) LIKE LOWER(CONCAT('%', :gameName, '%'))
+    AND p.clan.id = :clanId
+    GROUP BY p
+    ORDER BY COUNT(mp) DESC
+""")
+    List<Player> findAllByRiotIdGameNameLikeAndClanIdHasMatchesOrderByMatchCountDesc(
+            @Param("gameName") String gameName,
+            @Param("clanId") Long clanId
+    );
+
+
+}
