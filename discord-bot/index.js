@@ -423,8 +423,7 @@ client.on("messageCreate", async (message) => {
   if (!message.content.startsWith("!통계 게임")) return;
 
   const args = message.content.split(" ");
-  console.log(args);
-  const month = args[1];
+  const month = args[2];
   if (!/^\d{4}-\d{2}$/.test(month)) {
     return message.reply("📆 형식이 잘못되었습니다. 예: `!통계 게임 2025-04`");
   }
@@ -481,7 +480,7 @@ client.on("messageCreate", async (message) => {
   if (!message.content.startsWith("!통계 챔프")) return;
 
   const args = message.content.split(" ");
-  const month = args[1];
+  const month = args[2];
   if (!/^\d{4}-\d{2}$/.test(month)) {
     return message.reply("📆 형식이 잘못되었습니다. 예: `!통계 챔프 2025-04`");
   }
