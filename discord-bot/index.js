@@ -68,13 +68,13 @@ client.on("messageCreate", (message) => {
 // 서버 이름과 ID를 매핑
 const SERVER = {
   roflbot: "399480345239486478",
-  lolcode: "278523753489760256", // TODO: 알맞은 ID로 변경
+  lolcode: "278523753489760256",
 };
 
 // 서버별로 Host 헤더를 다르게 적용하기 위한 매핑
 const GUILD_HOST_MAP = {
   "399480345239486478": "roflbot.kro.kr",
-  "278523753489760256": "lolcode.kro.kr", // 예시
+  "278523753489760256": "lolcode.kro.kr",
 };
 
 ///////////////////// !명령어
@@ -87,10 +87,31 @@ client.on("messageCreate", (message) => {
   if (message.content === "!명령어") {
     message.reply(
       "**명령어 목록**\n" +
-        "`!최근` - 최근 5경기 요약 보기\n" +
         "`!링크` - 사이트 링크 받기\n" +
+        "`!최근` - 최근 5경기 요약 보기\n" +
         "`!전적` - 디스코드 닉네임으로 검색하여 플레이어 요약 정보 보기\n" +
         "`!전적 <닉네임>` - 플레이어 요약 정보 보기"
+    );
+  }
+});
+
+///////////////////// !docs
+client.on("messageCreate", (message) => {
+  if (message.author.bot) return;
+
+  // TODO: 추후 제거
+  if (message.guild.id === SERVER.lolcode) return;
+
+  if (message.content === "!docs") {
+    message.reply(
+      "**명령어 목록**\n" +
+        "`!링크` - 사이트 링크 받기\n" +
+        "`!최근` - 최근 5경기 요약 보기\n" +
+        "`!전적` - 디스코드 닉네임으로 검색하여 플레이어 요약 정보 보기\n" +
+        "`!전적 <닉네임>` - 플레이어 요약 정보 보기\n" +
+        "`!통계 게임 <YYYY-MM>` - 해당 월의 챔프 통계 보기\n" +
+        "`!통계 챔프 <YYYY-MM>` - 해당 월의 게임 통계 보기\n" +
+        "`!클랜통계 <YYYY-MM>` - 해당 월의 클랜 통계 보기\n"
     );
   }
 });
@@ -129,7 +150,7 @@ client.on("messageCreate", async (message) => {
 
   if (message.content === "!최근") {
     const guildId = message.guild?.id;
-    const host = GUILD_HOST_MAP[guildId] || "roflbot.kro.kr"; // 기본 호스트
+    const host = GUILD_HOST_MAP[guildId] || "lolcode.kro.kr"; // 기본 호스트
 
     try {
       const res = await axios.get("https://roflbot.kro.kr/api/matches", {
@@ -365,7 +386,7 @@ client.on("messageCreate", async (message) => {
 
   try {
     const guildId = message.guild?.id;
-    const host = GUILD_HOST_MAP[guildId] || "roflbot.kro.kr";
+    const host = GUILD_HOST_MAP[guildId] || "lolcode.kro.kr";
 
     const res = await axios.get(
       `https://roflbot.kro.kr/api/matches/player?nickname=${encodeURIComponent(
@@ -392,13 +413,175 @@ client.on("messageCreate", async (message) => {
   }
 });
 
+///////////////////// !통계 게임 YYYY-MM
+client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith("!통계 게임")) return;
+
+  const args = message.content.split(" ");
+  const month = args[1];
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    return message.reply("📆 형식이 잘못되었습니다. 예: `!통계 게임 2025-04`");
+  }
+
+  const host = GUILD_HOST_MAP[message.guild?.id || ""] || "lolcode.kro.kr";
+
+  try {
+    const res = await axios.get(
+      `https://roflbot.kro.kr/api/statistics/player?month=${month}`,
+      { headers: { Host: host } }
+    );
+
+    const { topByMatches, topByWinRate } = res.data;
+
+    const embed = new EmbedBuilder()
+      .setTitle(`🧑‍💻 ${month} 플레이어 통계`)
+      .setColor("#7d9beb")
+      .addFields({
+        name: "🎮 판수 Top 20",
+        value:
+          topByMatches
+            .map((p, i) => `${i + 1}. ${p.gameName} - ${p.matches}전`)
+            .join("\n") || "없음",
+        inline: true,
+      })
+      .addFields({
+        name: "🏆 승률 Top 20",
+        value:
+          topByWinRate
+            .map(
+              (p, i) =>
+                `${i + 1}. ${p.gameName} - ${p.wins}승 (${p.winRate.toFixed(
+                  1
+                )}%) KDA ${p.kda.toFixed(2)}`
+            )
+            .join("\n") || "없음",
+        inline: true,
+      });
+
+    await message.reply({ embeds: [embed] });
+  } catch (error) {
+    console.error("플레이어 통계 오류:", error);
+    message.reply("❌ 플레이어 통계를 불러오는 데 실패했습니다.");
+  }
+});
+
+///////////////////// !통계 챔프 YYYY-MM
+client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith("!통계 챔프")) return;
+
+  const args = message.content.split(" ");
+  const month = args[1];
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    return message.reply("📆 형식이 잘못되었습니다. 예: `!통계 챔프 2025-04`");
+  }
+
+  const host = GUILD_HOST_MAP[message.guild?.id || ""] || "lolcode.kro.kr";
+
+  try {
+    const res = await axios.get(
+      `https://roflbot.kro.kr/api/statistics/champion?month=${month}`,
+      { headers: { Host: host } }
+    );
+
+    const { popularChampions, tier1Champions, tier5Champions } = res.data;
+
+    const embed = new EmbedBuilder()
+      .setTitle(`📊 ${month} 챔피언 통계`)
+      .setColor("#7d9beb")
+      .addFields({
+        name: "🔥 인기 챔피언",
+        value:
+          popularChampions
+            .map(
+              (c, i) =>
+                `${i + 1}. ${getKoreanChampionName(c.name)} - ${c.matches}전 ${
+                  c.wins
+                }승 ${c.losses}패 (${c.winRate.toFixed(1)}%)`
+            )
+            .join("\n") || "없음",
+        inline: true,
+      })
+      .addFields(
+        {
+          name: "🏆 1티어",
+          value:
+            tier1Champions
+              .map(
+                (c, i) =>
+                  `${i + 1}. ${getKoreanChampionName(
+                    c.name
+                  )} (${c.score.toFixed(1)})`
+              )
+              .join("\n") || "없음",
+          inline: true,
+        },
+        {
+          name: "😢 5티어",
+          value:
+            tier5Champions
+              .map(
+                (c, i) =>
+                  `${i + 1}. ${getKoreanChampionName(
+                    c.name
+                  )} (${c.score.toFixed(1)})`
+              )
+              .join("\n") || "없음",
+          inline: true,
+        }
+      );
+
+    await message.reply({ embeds: [embed] });
+  } catch (error) {
+    console.error("챔피언 통계 오류:", error);
+    message.reply("❌ 챔피언 통계를 불러오는 데 실패했습니다.");
+  }
+});
+
+///////////////////// !클랜통계 YYYY-MM
+client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith("!클랜통계")) return;
+
+  const args = message.content.split(" ");
+  const month = args[1];
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    return message.reply("📆 형식이 잘못되었습니다. 예: `!클랜통계 2025-04`");
+  }
+
+  const host = GUILD_HOST_MAP[message.guild?.id || ""] || "lolcode.kro.kr";
+
+  try {
+    const res = await axios.get(
+      `https://roflbot.kro.kr/api/statistics/clan?month=${month}`,
+      { headers: { Host: host } }
+    );
+
+    const players = res.data.players;
+
+    const embed = new EmbedBuilder()
+      .setTitle(`👥 ${month} 클랜 전체 전적`)
+      .setColor("#7d9beb")
+      .setDescription(
+        players
+          .map((p, i) => `${i + 1}. ${p.gameName} - ${p.matches}전`)
+          .join("\n") || "전적 없음"
+      );
+
+    await message.reply({ embeds: [embed] });
+  } catch (error) {
+    console.error("클랜 통계 오류:", error);
+    message.reply("❌ 클랜 통계를 불러오는 데 실패했습니다.");
+  }
+});
+
 ///////////////////// 리플레이 파일 업로드(코드클랜)
 client.on("messageCreate", async (message) => {
   // 봇이 보낸 메시지는 무시
   if (message.author.bot) return;
 
   // 특정 서버에서만 작동
-  // TODO: 코드에 맞는걸로 변경
   if (
     message.guild.id !== "278523753489760256" &&
     message.guild.id !== "1365246914706149387"
