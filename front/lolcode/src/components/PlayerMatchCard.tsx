@@ -1,7 +1,7 @@
 import React from "react";
 import { PlayerStatsResponse, SummaryStats } from "@/types/rofl";
 import MatchCard from "./MatchCard";
-import { useChampionMap, useGetPlayerPositions } from "@/hooks";
+import { useChampionMap } from "@/hooks";
 import ChampionPortrait from "./ChampionPortrait";
 import Image from "next/image";
 import Loading from "./loading/Loading";
@@ -49,14 +49,14 @@ const SummaryBox = ({
 
 const PlayerMatchCard: React.FC<Props> = ({ player }) => {
   const { championMap, loading, error } = useChampionMap();
-  const {
-    data: playerPositions,
-    isLoading: positionLoading,
-    error: positionError,
-  } = useGetPlayerPositions(player.gameName);
+  // const {
+  //   data: playerPositions,
+  //   isLoading: positionLoading,
+  //   error: positionError,
+  // } = useGetPlayerPositions(player.gameName);
 
-  if (loading || positionLoading) return <Loading />;
-  if (error || positionError) return <div>오류 발생: {error}</div>;
+  if (loading) return <Loading />;
+  if (error) return <div>오류 발생: {error}</div>;
 
   const orderedPositions = [
     "TOP",
