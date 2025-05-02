@@ -155,7 +155,7 @@ client.on("messageCreate", async (message) => {
     try {
       const res = await axios.get("https://roflbot.kro.kr/api/matches", {
         headers: {
-          Host: host,
+          Origin: host,
         },
       });
       const matches = res.data;
@@ -394,7 +394,7 @@ client.on("messageCreate", async (message) => {
       )}`,
       {
         headers: {
-          Host: host,
+          Origin: host,
         },
       }
     );
@@ -433,7 +433,11 @@ client.on("messageCreate", async (message) => {
   try {
     const res = await axios.get(
       `https://roflbot.kro.kr/api/statistics/player?month=${month}`,
-      { headers: { Host: host } }
+      {
+        headers: {
+          Origin: host,
+        },
+      }
     );
 
     const { topByMatches, topByWinRate } = res.data;
@@ -490,7 +494,11 @@ client.on("messageCreate", async (message) => {
   try {
     const res = await axios.get(
       `https://roflbot.kro.kr/api/statistics/champion?month=${month}`,
-      { headers: { Host: host } }
+      {
+        headers: {
+          Origin: host,
+        },
+      }
     );
 
     const { popularChampions, tier1Champions, tier5Champions } = res.data;
@@ -567,7 +575,11 @@ client.on("messageCreate", async (message) => {
   try {
     const res = await axios.get(
       `https://roflbot.kro.kr/api/statistics/clan?month=${month}`,
-      { headers: { Host: host } }
+      {
+        headers: {
+          Origin: host,
+        },
+      }
     );
 
     const players = res.data.players;
@@ -629,7 +641,7 @@ client.on("messageCreate", async (message) => {
         {
           headers: {
             ...form.getHeaders(),
-            Host: host,
+            Origin: host,
           },
         }
       );
