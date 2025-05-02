@@ -47,8 +47,8 @@ public class PlayerRepositoryImpl implements PlayerRepositoryCustom {
                 p.riotIdGameName,
                 COUNT(mp.id),
                 SUM(CASE WHEN mp.win = true THEN 1 ELSE 0 END),
-                SUM(mp.kills),
-                SUM(mp.deaths),
+                SUM(mp.championsKilled),
+                SUM(mp.numDeaths),
                 SUM(mp.assists)
             )
             FROM MatchParticipant mp

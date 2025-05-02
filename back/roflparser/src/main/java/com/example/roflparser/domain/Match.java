@@ -7,6 +7,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "matches")
@@ -34,6 +36,8 @@ public class Match {
     @JoinColumn(name = "clan_id")
     private Clan clan;
 
+    @OneToMany(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MatchParticipant> participants = new ArrayList<>();
 
     @CreatedDate
     private LocalDateTime createdAt;
