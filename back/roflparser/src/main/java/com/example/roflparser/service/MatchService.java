@@ -42,13 +42,14 @@ public class MatchService {
         return parseRoflToJson(file);
     }
 
+
     /**
      * 도메인별로 클랜 id를 설정하는 함수 - 클랜이 늘어남에 따라 수기 작성 필요
      */
-    private Long determineClanIdFromHost(String host) {
-        if (host == null) return 1L;
-        if (host.contains("roflbot.kro.kr")) return 1L;
-        if (host.contains("lolcode.kro.kr")) return 2L;
+    private Long determineClanIdFromOrigin(String origin) {
+        if (origin == null) return 1L;
+        if (origin.contains("roflbot.kro.kr")) return 1L;
+        if (origin.contains("lolcode.kro.kr")) return 2L;
         return 1L;
     }
 
@@ -57,7 +58,7 @@ public class MatchService {
      */
     @Transactional
     public void handleRoflUpload(MultipartFile file, String host) throws Exception {
-        Long clanId = determineClanIdFromHost(host);
+        Long clanId = determineClanIdFromOrigin(host);
 
         // clanId를 기반으로 Clan 엔티티 조회
         Clan clan = clanRepository.findById(clanId)
@@ -251,7 +252,7 @@ public class MatchService {
      */
     @Transactional(readOnly = true)
     public List<PlayerStatsResponse> findMatchesByPlayer(String gameName, String tagLine, String sort, String host) {
-        Long clanId = determineClanIdFromHost(host);
+        Long clanId = determineClanIdFromOrigin(host);
         List<Player> players;
 
         if (tagLine != null && !tagLine.isBlank()) {
@@ -431,7 +432,7 @@ public class MatchService {
      */
     @Transactional
     public void updatePlayerNickname(String oldGameName, String oldTagLine, String newGameName, String newTagLine, String host) {
-        Long clanId = determineClanIdFromHost(host);
+        Long clanId = determineClanIdFromOrigin(host);
 
         Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(oldGameName, oldTagLine)
                 .orElseThrow(() -> new IllegalArgumentException("기존 닉네임의 플레이어를 찾을 수 없습니다."));
@@ -468,7 +469,7 @@ public class MatchService {
      */
     @Transactional(readOnly = true)
     public List<MatchDetailResponse> findAllMatches(String sort, String host) {
-        Long clanId = determineClanIdFromHost(host);
+        Long clanId = determineClanIdFromOrigin(host);
 
         // 해당 클랜 소속 플레이어가 참가한 매치 ID만 가져옴
         List<Long> matchIds = matchParticipantRepository.findDistinctMatchIdsByPlayerClanId(clanId);
@@ -490,7 +491,7 @@ public class MatchService {
      */
     @Transactional(readOnly = true)
     public MatchDetailResponse findMatchByMatchId(String matchId, String host) {
-        Long clanId = determineClanIdFromHost(host);
+        Long clanId = determineClanIdFromOrigin(host);
 
         Match match = matchRepository.findByMatchIdAndClanId(matchId, clanId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 matchId의 경기를 찾을 수 없습니다."));
@@ -504,7 +505,7 @@ public class MatchService {
      */
     @Transactional(readOnly = true)
     public List<PlayerSimpleResponse> findPlayersByNickname(String nickname, String host) {
-        Long clanId = determineClanIdFromHost(host);
+        Long clanId = determineClanIdFromOrigin(host);
 
         if (nickname == null || nickname.isBlank()) {
             // 닉네임 없으면 클랜 소속 전체 플레이어 조회
@@ -517,9 +518,6 @@ public class MatchService {
                     .toList();
         }
     }
-
-
-
 
     /**
      * SummaryStats에 스탯 누적

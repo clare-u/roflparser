@@ -91,8 +91,8 @@ public class RoflController {
             @Parameter(description = "정렬 순서 (asc=오래된순, desc=최신순)") String sort,
             HttpServletRequest request // 추가: HttpServletRequest 주입
     ) {
-        String host = request.getHeader("Host"); // 요청 host 꺼내기
-        return ResponseEntity.ok(matchService.findMatchesByPlayer(nickname, tagline, sort, host));
+        String origin = request.getHeader("Origin");
+        return ResponseEntity.ok(matchService.findMatchesByPlayer(nickname, tagline, sort, origin));
     }
 
     @Operation(summary = "전체 경기 목록 조회", description = "저장된 모든 경기 정보를 세부사항과 함께 조회합니다. sort=asc 또는 desc (기본: desc)")
@@ -101,8 +101,8 @@ public class RoflController {
             @RequestParam(required = false, defaultValue = "desc")
             @Parameter(description = "정렬 순서 (asc=오래된순, desc=최신순)") String sort, HttpServletRequest request
     ) {
-        String host = request.getHeader("Host");
-        List<MatchDetailResponse> matches = matchService.findAllMatches(sort, host);
+        String origin = request.getHeader("Origin");
+        List<MatchDetailResponse> matches = matchService.findAllMatches(sort, origin);
         return ResponseEntity.ok(matches);
     }
 
@@ -112,8 +112,8 @@ public class RoflController {
             @PathVariable String matchId,
             HttpServletRequest request
     ) {
-        String host = request.getHeader("Host");
-        return ResponseEntity.ok(matchService.findMatchByMatchId(matchId, host));
+        String origin = request.getHeader("Origin");
+        return ResponseEntity.ok(matchService.findMatchByMatchId(matchId, origin));
     }
 
     @Operation(summary = "닉네임으로 플레이어 목록 조회", description = "nickname과 일치하는 플레이어들의 태그라인 정보를 조회합니다. nickname이 없으면 전체 플레이어 목록을 반환합니다.")
@@ -122,8 +122,8 @@ public class RoflController {
             @RequestParam(required = false) String nickname,
             HttpServletRequest request
     ) {
-        String host = request.getHeader("Host");
-        return ResponseEntity.ok(matchService.findPlayersByNickname(nickname, host));
+        String origin = request.getHeader("Origin");
+        return ResponseEntity.ok(matchService.findPlayersByNickname(nickname, origin));
     }
 
     @Operation(summary = "플레이어 닉네임 변경", description = "기존 게임 이름과 태그라인을 기준으로 플레이어 닉네임을 새 값으로 변경합니다.")
@@ -138,13 +138,13 @@ public class RoflController {
             HttpServletRequest httpRequest
     ) {
         try {
-            String host = httpRequest.getHeader("Host");
+            String origin = httpRequest.getHeader("Origin");
             matchService.updatePlayerNickname(
                     request.getOldGameName(),
                     request.getOldTagLine(),
                     request.getNewGameName(),
                     request.getNewTagLine(),
-                    host
+                    origin
             );
             return ResponseEntity.ok("닉네임이 성공적으로 변경되었습니다.");
         } catch (IllegalArgumentException e) {
@@ -170,7 +170,5 @@ public class RoflController {
         return ResponseEntity.ok(history);
 
     }
-
-
 
 }
