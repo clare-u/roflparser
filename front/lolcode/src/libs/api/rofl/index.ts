@@ -1,5 +1,5 @@
 import { handleApiRequest } from "../client";
-import { MatchSummary, PlayerInfo, PlayerStatsResponse } from "@/types/rofl";
+import { MatchSummary, PlayerInfo, PlayerStatsResponse } from "@/types";
 
 export const uploadRoflFile = async (file: File): Promise<string> => {
   const formData = new FormData();
