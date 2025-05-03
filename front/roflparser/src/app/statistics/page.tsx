@@ -15,7 +15,7 @@ const getMonthOptions = () => {
   const now = new Date();
   const months: string[] = [];
 
-  let d = new Date(now.getFullYear(), now.getMonth(), 1);
+  const d = new Date(now.getFullYear(), now.getMonth(), 1);
   while (d >= start) {
     const m = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     months.push(m);

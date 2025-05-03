@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import QueryProvider from "@/components/QueryProvider";
 import Navigation from "@/components/navigation/Navigation";
 import Script from "next/script";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "롤내전봇",
@@ -41,9 +42,11 @@ export default function RootLayout({
       <body>
         <QueryProvider>
           <Navigation />
-          <div className="flex h-full flex-col items-center justify-center">
-            {children}
-          </div>
+          <Suspense>
+            <div className="flex h-full flex-col items-center justify-center">
+              {children}
+            </div>
+          </Suspense>
           <Toaster richColors position="top-right" offset={60} />
         </QueryProvider>
       </body>
