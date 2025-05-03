@@ -12,9 +12,11 @@ import com.example.roflparser.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.example.roflparser.dto.response.ChampionStatisticsResponse.ChampionScoreDto;
 
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -42,8 +44,22 @@ public class StatisticsService {
 
         // 각각 응답용 DTO로 매핑
         List<ChampionStatisticsResponse.ChampionStatDto> popular = mapToPopularChampions(allStats);
-        List<ChampionStatisticsResponse.ChampionScoreDto> tier1 = mapToTierChampions(allStats, true);
-        List<ChampionStatisticsResponse.ChampionScoreDto> tier5 = mapToTierChampions(allStats, false);
+        List<ChampionScoreDto> scoredHigh = mapToTierChampions(allStats, true);
+        List<ChampionScoreDto> scoredLow = mapToTierChampions(allStats, false);
+
+        Set<String> tier1Names = scoredHigh.stream()
+                .limit(20)
+                .map(ChampionScoreDto::getName)
+                .collect(Collectors.toSet());
+
+        List<ChampionScoreDto> tier1 = scoredHigh.stream()
+                .limit(20)
+                .toList();
+
+        List<ChampionScoreDto> tier5 = scoredLow.stream()
+                .filter(c -> !tier1Names.contains(c.getName())) // 중복 제거 로직
+                .limit(20)
+                .toList();
 
         return ChampionStatisticsResponse.builder()
                 .popularChampions(popular)
@@ -133,15 +149,22 @@ public class StatisticsService {
      * - 승률과 픽률 기반 score 계산
      * - 5판 이상 사용된 챔피언만 포함
      * - 1티어: score 높은 순 / 5티어: 낮은 순
-     * - 중복 제거: 상위/하위 챔피언 그룹이 겹치지 않게 필터링
      */
     private List<ChampionStatisticsResponse.ChampionScoreDto> mapToTierChampions(List<ChampionStat> stats, boolean highTier) {
-        List<ChampionStatisticsResponse.ChampionScoreDto> scored = stats.stream()
+        Comparator<ChampionScoreDto> comparator = Comparator
+                .comparingDouble(ChampionScoreDto::getScore)
+                .thenComparing(ChampionScoreDto::getName);
+
+        if (highTier) {
+            comparator = comparator.reversed();
+        }
+
+        return stats.stream()
                 .filter(s -> s.getMatches() >= 5)
                 .map(s -> {
-                    double pickRate = s.getPickRate(); // 이건 ChampionStat 클래스에 전체 판수 대비 계산되어 있어야 함
+                    double pickRate = s.getPickRate();
                     double score = s.getWinRate() * 0.7 + pickRate * 0.3;
-                    return ChampionStatisticsResponse.ChampionScoreDto.builder()
+                    return ChampionScoreDto.builder()
                             .name(s.getChampion())
                             .matches((int) s.getMatches())
                             .wins((int) s.getWins())
@@ -151,23 +174,11 @@ public class StatisticsService {
                             .score(score)
                             .build();
                 })
-                .sorted(Comparator.comparingDouble(ChampionStatisticsResponse.ChampionScoreDto::getScore)
-                        .reversed()
-                        .thenComparing(ChampionStatisticsResponse.ChampionScoreDto::getName))
-                .toList();
-
-        // 점수 정렬된 리스트에서 상위 또는 하위 20개 추출
-        List<ChampionStatisticsResponse.ChampionScoreDto> tierList = highTier
-                ? scored.stream().limit(20).toList()
-                : scored.stream().sorted(Comparator.comparingDouble(ChampionStatisticsResponse.ChampionScoreDto::getScore)).limit(20).toList();
-
-        // 상호 중복 제거: tier1과 tier5에서 겹치는 챔피언 제거
-        Set<String> exclude = tierList.stream().map(ChampionStatisticsResponse.ChampionScoreDto::getName).collect(Collectors.toSet());
-        return scored.stream()
-                .filter(c -> !exclude.contains(c.getName()))
-                .limit(20)
+                .sorted(comparator)
                 .toList();
     }
+
+
 
     // ===================== DTO 매핑 ======================
 
