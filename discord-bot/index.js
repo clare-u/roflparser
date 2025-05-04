@@ -90,7 +90,8 @@ client.on("messageCreate", (message) => {
         "`!링크` - 사이트 링크 받기\n" +
         "`!최근` - 최근 5경기 요약 보기\n" +
         "`!전적` - 디스코드 닉네임으로 검색하여 플레이어 요약 정보 보기\n" +
-        "`!전적 <닉네임>` - 플레이어 요약 정보 보기"
+        "`!전적 <닉네임>` - 플레이어 요약 정보 보기\n" +
+        "`!닉변 <과거닉네임#태그>/<바꿀닉네임#태그>` - 플레이어 닉네임 변경 및 전적 이관"
     );
   }
 });
@@ -109,9 +110,10 @@ client.on("messageCreate", (message) => {
         "`!최근` - 최근 5경기 요약 보기\n" +
         "`!전적` - 디스코드 닉네임으로 검색하여 플레이어 요약 정보 보기\n" +
         "`!전적 <닉네임>` - 플레이어 요약 정보 보기\n" +
+        "`!닉변 <과거닉네임#태그>/<바꿀닉네임#태그>` - 플레이어 닉네임 변경 및 전적 이관\n" +
         "`!통계 게임 <YYYY-MM>` - 해당 월의 챔프 통계 보기\n" +
         "`!통계 챔프 <YYYY-MM>` - 해당 월의 게임 통계 보기\n" +
-        "`!클랜통계 <YYYY-MM>` - 해당 월의 클랜 통계 보기\n"
+        "`!클랜통계 <YYYY-MM>` - 해당 월의 클랜 통계 보기"
     );
   }
 });
@@ -670,6 +672,58 @@ client.on("messageCreate", async (message) => {
         `❌ 업로드 중 오류가 발생했습니다.\n\`\`\`${errorMsg}\`\`\``
       );
     }
+  }
+});
+
+///////////////////// !닉변
+client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+
+  if (!message.content.startsWith("!닉변")) return;
+
+  const guildId = message.guild?.id;
+  const host = GUILD_HOST_MAP[guildId || ""] || "lolcode.kro.kr";
+
+  const content = message.content.replace("!닉변", "").trim();
+  const [oldRaw, newRaw] = content.split("/").map((s) => s.trim());
+
+  const parseNickname = (raw) => {
+    const [name, tag] = raw
+      .replace("#", " #")
+      .split(" ")
+      .map((s) => s.trim());
+    return { gameName: name, tagLine: tag?.replace(/^#/, "") || "KR1" };
+  };
+
+  try {
+    const { gameName: oldGameName, tagLine: oldTagLine } =
+      parseNickname(oldRaw);
+    const { gameName: newGameName, tagLine: newTagLine } =
+      parseNickname(newRaw);
+
+    await axios.put(
+      "https://roflbot.kro.kr/api/players/nickname",
+      {
+        oldGameName,
+        oldTagLine,
+        newGameName,
+        newTagLine,
+      },
+      {
+        headers: {
+          Origin: host,
+        },
+      }
+    );
+
+    await message.reply(
+      `✅ 닉네임이 성공적으로 변경되었습니다!\n\`${oldGameName}#${oldTagLine} → ${newGameName}#${newTagLine}\``
+    );
+  } catch (error) {
+    console.error("닉네임 변경 오류:", error);
+    const msg =
+      error.response?.data?.message || error.message || "알 수 없는 오류";
+    await message.reply(`❌ 닉네임 변경 실패: \`${msg}\``);
   }
 });
 
