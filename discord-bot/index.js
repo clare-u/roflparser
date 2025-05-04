@@ -55,15 +55,15 @@ const getKoreanChampionName = (key) => {
 };
 
 ///////////////////// 코딩용 서버정보
-client.on("messageCreate", (message) => {
-  if (message.author.bot) return;
+// client.on("messageCreate", (message) => {
+//   if (message.author.bot) return;
 
-  if (message.content === "!서버정보") {
-    message.reply(
-      `서버 이름: ${message.guild?.name}\n서버 ID: ${message.guild?.id}`
-    );
-  }
-});
+//   if (message.content === "!서버정보") {
+//     message.reply(
+//       `서버 이름: ${message.guild?.name}\n서버 ID: ${message.guild?.id}`
+//     );
+//   }
+// });
 
 // 서버 이름과 ID를 매핑
 const SERVER = {
@@ -75,6 +75,12 @@ const SERVER = {
 const GUILD_HOST_MAP = {
   "399480345239486478": "roflbot.kro.kr",
   "278523753489760256": "lolcode.kro.kr",
+};
+
+// 서버 ID별 링크 설정
+const SERVER_LINK = {
+  [SERVER.roflbot]: "https://roflbot.kro.kr",
+  [SERVER.lolcode]: "https://lolcode.kro.kr",
 };
 
 ///////////////////// !명령어
@@ -94,15 +100,8 @@ client.on("messageCreate", (message) => {
         "`!닉변 <과거닉네임#태그>/<바꿀닉네임#태그>` - 플레이어 닉네임 변경 및 전적 이관"
     );
   }
-});
 
-///////////////////// !docs
-client.on("messageCreate", (message) => {
-  if (message.author.bot) return;
-
-  // TODO: 추후 제거
-  if (message.guild.id === SERVER.lolcode) return;
-
+  ///////////////////// !docs
   if (message.content === "!docs") {
     message.reply(
       "**명령어 목록**\n" +
@@ -116,21 +115,8 @@ client.on("messageCreate", (message) => {
         "`!클랜통계 <YYYY-MM>` - 해당 월의 클랜 통계 보기"
     );
   }
-});
 
-///////////////////// !링크
-// 서버 ID별 링크 설정
-const SERVER_LINK = {
-  [SERVER.roflbot]: "https://roflbot.kro.kr",
-  [SERVER.lolcode]: "https://lolcode.kro.kr",
-};
-
-client.on("messageCreate", (message) => {
-  if (message.author.bot) return;
-
-  // TODO: 추후 제거
-  if (message.guild.id === SERVER.lolcode) return;
-
+  ///////////////////// !링크
   if (message.content === "!링크") {
     const guildId = message.guild?.id;
 
@@ -688,11 +674,13 @@ client.on("messageCreate", async (message) => {
   const [oldRaw, newRaw] = content.split("/").map((s) => s.trim());
 
   const parseNickname = (raw) => {
-    const [name, tag] = raw
-      .replace("#", " #")
-      .split(" ")
-      .map((s) => s.trim());
-    return { gameName: name, tagLine: tag?.replace(/^#/, "") || "KR1" };
+    const clean = raw.replace(/\s+/g, ""); // 모든 공백 제거
+    const [name, tag] = clean.split("#"); // '#' 기준으로 정확히 분할
+
+    return {
+      gameName: name,
+      tagLine: tag || "KR1", // 태그가 없으면 KR1 기본값
+    };
   };
 
   try {
