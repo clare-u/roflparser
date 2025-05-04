@@ -6,9 +6,11 @@ import ChampionPortrait from "./ChampionPortrait";
 import Image from "next/image";
 import Loading from "./loading/Loading";
 import { mapPositionLabel } from "@/utils/position";
+import Pagination from "@/components/pagination/Pagination";
 
 interface Props {
   player: PlayerStatsResponse;
+  currentPage: number;
 }
 
 const SummaryBox = ({
@@ -47,7 +49,7 @@ const SummaryBox = ({
   </div>
 );
 
-const PlayerMatchCard: React.FC<Props> = ({ player }) => {
+const PlayerMatchCard: React.FC<Props> = ({ player, currentPage }) => {
   const { championMap, loading, error } = useChampionMap();
   const {
     data: playerPositions,
@@ -154,6 +156,12 @@ const PlayerMatchCard: React.FC<Props> = ({ player }) => {
             championMap={championMap}
           />
         ))}
+        <Pagination
+          totalItems={player.totalItems}
+          currentPage={currentPage}
+          pageCount={10}
+          itemCountPerPage={10}
+        />
       </div>
     </div>
   );

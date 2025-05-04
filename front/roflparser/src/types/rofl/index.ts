@@ -50,6 +50,16 @@ export interface PlayerStatsResponse {
   byChampion: Record<string, SummaryStats>;
   byPosition: Record<string, SummaryStats>;
   matches: PlayerMatchInfo[];
+  recentMatches: RecentMatchSummary[];
+  mostPlayedChampions: ChampionStats[];
+  bestTeamwork: TeamworkStats[];
+  worstTeamwork: TeamworkStats[];
+  bestLaneOpponents: OpponentStats[];
+  worstLaneOpponents: OpponentStats[];
+  monthlyStats: SummaryStats;
+  totalItems: number;
+  currentPage: number;
+  pageSize: number;
 }
 
 export interface PlayerMatchInfo {
@@ -63,4 +73,41 @@ export enum Position {
   MIDDLE = "MIDDLE",
   BOTTOM = "BOTTOM",
   UTILITY = "UTILITY",
+}
+
+export interface RecentMatchSummary {
+  win: boolean;
+  champion: string;
+  kills: number;
+  deaths: number;
+  assists: number;
+}
+
+export interface ChampionStats {
+  champion: string;
+  matches: number;
+  winRate: number;
+  kda: number;
+}
+
+export interface TeamworkStats {
+  gameName: string;
+  tagLine: string;
+  matches: number;
+  winRate: number;
+}
+
+export interface OpponentStats {
+  gameName: string;
+  tagLine: string;
+  matches: number;
+  winRate: number;
+}
+
+// 페이지네이션
+export interface PaginatedMatchSummaryResponse {
+  totalItems: number;
+  currentPage: number;
+  pageSize: number;
+  items: MatchSummary[];
 }

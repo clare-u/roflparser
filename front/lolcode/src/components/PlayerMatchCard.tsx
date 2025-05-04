@@ -1,14 +1,16 @@
 import React from "react";
 import { PlayerStatsResponse, SummaryStats } from "@/types/rofl";
 import MatchCard from "./MatchCard";
-import { useChampionMap } from "@/hooks";
+import { useChampionMap, useGetPlayerPositions } from "@/hooks";
 import ChampionPortrait from "./ChampionPortrait";
 import Image from "next/image";
 import Loading from "./loading/Loading";
 import { mapPositionLabel } from "@/utils/position";
+import Pagination from "@/components/pagination/Pagination";
 
 interface Props {
   player: PlayerStatsResponse;
+  currentPage: number;
 }
 
 const SummaryBox = ({
@@ -47,16 +49,16 @@ const SummaryBox = ({
   </div>
 );
 
-const PlayerMatchCard: React.FC<Props> = ({ player }) => {
+const PlayerMatchCard: React.FC<Props> = ({ player, currentPage }) => {
   const { championMap, loading, error } = useChampionMap();
-  // const {
-  //   data: playerPositions,
-  //   isLoading: positionLoading,
-  //   error: positionError,
-  // } = useGetPlayerPositions(player.gameName);
+  const {
+    data: playerPositions,
+    isLoading: positionLoading,
+    error: positionError,
+  } = useGetPlayerPositions(player.gameName);
 
-  if (loading) return <Loading />;
-  if (error) return <div>오류 발생: {error}</div>;
+  if (loading || positionLoading) return <Loading />;
+  if (error || positionError) return <div>오류 발생: {error}</div>;
 
   const orderedPositions = [
     "TOP",
@@ -77,7 +79,7 @@ const PlayerMatchCard: React.FC<Props> = ({ player }) => {
       <SummaryBox title="총 전적" stats={player.summary} />
 
       {/* 라인별 내전 티어 */}
-      {/* <div className="mt-6">
+      <div className="mt-6">
         <h3 className="font-semibold text-lg mb-2 text-gray-800">
           라인별 내전 티어
         </h3>
@@ -99,7 +101,7 @@ const PlayerMatchCard: React.FC<Props> = ({ player }) => {
             </div>
           ))}
         </div>
-      </div> */}
+      </div>
 
       {/* 라인별 전적 */}
       <div className="mt-4">
@@ -154,6 +156,12 @@ const PlayerMatchCard: React.FC<Props> = ({ player }) => {
             championMap={championMap}
           />
         ))}
+        <Pagination
+          totalItems={player.totalItems}
+          currentPage={currentPage}
+          pageCount={10}
+          itemCountPerPage={10}
+        />
       </div>
     </div>
   );

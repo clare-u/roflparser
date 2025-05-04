@@ -1,5 +1,10 @@
 import { handleApiRequest } from "../client";
-import { MatchSummary, PlayerInfo, PlayerStatsResponse } from "@/types";
+import {
+  MatchSummary,
+  PlayerInfo,
+  PlayerStatsResponse,
+  PaginatedMatchSummaryResponse,
+} from "@/types";
 
 export const uploadRoflFile = async (file: File): Promise<string> => {
   const formData = new FormData();
@@ -13,9 +18,13 @@ export const uploadRoflFile = async (file: File): Promise<string> => {
 };
 
 // 저장된 모든 경기 정보를 조회하는 API (정렬 순서: asc 또는 desc, 기본은 desc)
-export const getMatches = async (sort: "asc" | "desc" = "desc") => {
-  return handleApiRequest<MatchSummary[], "get">(
-    `/api/matches?sort=${sort}`,
+export const getMatches = async (
+  sort: "asc" | "desc" = "desc",
+  page: number,
+  size = 10
+) => {
+  return handleApiRequest<PaginatedMatchSummaryResponse, "get">(
+    `/api/matches?sort=${sort}&page=${page}&size=${size}`,
     "get"
   );
 };
@@ -31,13 +40,20 @@ export const getMatchById = async (matchId: string) => {
 // 특정 플레이어의 전적을 닉네임/태그라인으로 검색
 export const getMatchesByPlayer = async (
   nickname: string,
+  page: number,
   tagline?: string,
-  sort: "asc" | "desc" = "desc"
+  sort: "asc" | "desc" = "desc",
+  size = 10
 ) => {
-  const query = new URLSearchParams({ nickname, sort });
+  const query = new URLSearchParams({
+    nickname,
+    sort,
+    page: String(page),
+    size: String(size),
+  });
   if (tagline) query.append("tagline", tagline);
 
-  return handleApiRequest<PlayerStatsResponse[], "get">(
+  return handleApiRequest<PlayerStatsResponse, "get">(
     `/api/matches/player?${query.toString()}`,
     "get"
   );

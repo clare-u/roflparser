@@ -3,9 +3,19 @@ import Loading from "@/components/loading/Loading";
 import MatchCard from "@/components/MatchCard";
 import { useMatches } from "@/hooks/rofl";
 import { useChampionMap } from "@/hooks/riot/useChampionMap";
+import Pagination from "@/components/pagination/Pagination";
+import { useSearchParams } from "next/navigation";
 
 export default function SearchPage() {
-  const { data: matches, isLoading, error } = useMatches("desc");
+  const searchParams = useSearchParams();
+  const pageParam = searchParams.get("page");
+  const currentPage = pageParam ? parseInt(pageParam) : 1; // 1-based UI
+
+  const {
+    data: matches,
+    isLoading,
+    error,
+  } = useMatches("desc", currentPage - 1); // 0-based API
   const {
     championMap,
     loading: champLoading,
@@ -29,7 +39,7 @@ export default function SearchPage() {
   return (
     <div className="flex w-full max-w-[1200px] flex-col gap-[20px] py-[20px]">
       <div>
-        {matches?.map((match) => (
+        {matches?.items.map((match) => (
           <MatchCard
             key={match.matchId}
             match={match}
@@ -37,6 +47,12 @@ export default function SearchPage() {
           />
         ))}
       </div>
+      <Pagination
+        totalItems={matches!.totalItems}
+        currentPage={currentPage}
+        pageCount={10}
+        itemCountPerPage={10}
+      />
     </div>
   );
 }
