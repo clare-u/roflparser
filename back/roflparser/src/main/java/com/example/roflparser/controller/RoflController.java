@@ -3,6 +3,7 @@ package com.example.roflparser.controller;
 import com.example.roflparser.domain.PlayerNicknameHistory;
 import com.example.roflparser.dto.request.NicknameUpdateRequest;
 import com.example.roflparser.dto.response.MatchDetailResponse;
+import com.example.roflparser.dto.response.PaginatedMatchDetailResponse;
 import com.example.roflparser.dto.response.PlayerSimpleResponse;
 import com.example.roflparser.dto.response.PlayerStatsResponse;
 import com.example.roflparser.exception.DuplicateMatchException;
@@ -89,21 +90,25 @@ public class RoflController {
             @Parameter(description = "플레이어 태그라인 (예: KR1). 선택값입니다.") String tagline,
             @RequestParam(required = false, defaultValue = "desc")
             @Parameter(description = "정렬 순서 (asc=오래된순, desc=최신순)") String sort,
-            HttpServletRequest request // 추가: HttpServletRequest 주입
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request
     ) {
         String origin = request.getHeader("Origin");
-        return ResponseEntity.ok(matchService.findMatchesByPlayer(nickname, tagline, sort, origin));
+        return ResponseEntity.ok(matchService.findMatchesByPlayer(nickname, tagline, sort, origin, page, size));
     }
 
     @Operation(summary = "전체 경기 목록 조회", description = "저장된 모든 경기 정보를 세부사항과 함께 조회합니다. sort=asc 또는 desc (기본: desc)")
     @GetMapping("/matches")
-    public ResponseEntity<List<MatchDetailResponse>> getAllMatches(
+    public ResponseEntity<PaginatedMatchDetailResponse> getAllMatches(
             @RequestParam(required = false, defaultValue = "desc")
-            @Parameter(description = "정렬 순서 (asc=오래된순, desc=최신순)") String sort, HttpServletRequest request
+            @Parameter(description = "정렬 순서 (asc=오래된순, desc=최신순)") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request
     ) {
         String origin = request.getHeader("Origin");
-        List<MatchDetailResponse> matches = matchService.findAllMatches(sort, origin);
-        return ResponseEntity.ok(matches);
+        return ResponseEntity.ok(matchService.findAllMatches(sort, origin, page, size));
     }
 
     @Operation(summary = "matchId로 경기 조회", description = "matchId를 기준으로 해당 경기의 세부 정보를 조회합니다.")

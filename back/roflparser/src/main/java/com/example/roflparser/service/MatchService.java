@@ -251,7 +251,7 @@ public class MatchService {
      * 플레이어 전적 조회 (도메인별 클랜 ID 적용)
      */
     @Transactional(readOnly = true)
-    public List<PlayerStatsResponse> findMatchesByPlayer(String gameName, String tagLine, String sort, String host) {
+    public List<PlayerStatsResponse> findMatchesByPlayer(String gameName, String tagLine, String sort, String host, int page, int size) {
         Long clanId = determineClanIdFromOrigin(host);
         List<Player> players;
 
@@ -269,16 +269,22 @@ public class MatchService {
             }
         }
 
+
         return players.stream().map(player -> {
+
             List<MatchParticipant> parts = "asc".equalsIgnoreCase(sort)
                     ? matchParticipantRepository.findAllByPlayerOrderByMatch_MatchIdAsc(player)
                     : matchParticipantRepository.findAllByPlayerOrderByMatch_MatchIdDesc(player);
+
+            System.out.println("Player: " + player.getRiotIdGameName());
+            System.out.println("parts.size(): " + parts.size());
 
             SummaryStats summary = new SummaryStats();
             SummaryStats monthlyStats = new SummaryStats();
             Map<String, SummaryStats> byChampion = new HashMap<>();
             Map<Position, SummaryStats> byPosition = new HashMap<>();
             List<PlayerMatchInfo> matches = new ArrayList<>();
+
             List<RecentMatchSummary> recentMatches = new ArrayList<>();
 
             Map<String, TeamworkStatsAggregator> teamworkMap = new HashMap<>();
@@ -409,6 +415,11 @@ public class MatchService {
                     .map(OpponentStatsAggregator::toDto)
                     .toList();
 
+            // 마지막에 페이지네이션된 matches 추출
+            int fromIndex = Math.min(page * size, matches.size());
+            int toIndex = Math.min(fromIndex + size, matches.size());
+            List<PlayerMatchInfo> pagedMatches = matches.subList(fromIndex, toIndex);
+
             return PlayerStatsResponse.builder()
                     .gameName(player.getRiotIdGameName())
                     .tagLine(player.getRiotIdTagLine())
@@ -416,7 +427,10 @@ public class MatchService {
                     .monthlyStats(monthlyStats)
                     .byChampion(byChampion)
                     .byPosition(byPosition)
-                    .matches(matches)
+                    .matches(pagedMatches)
+                    .totalItems(matches.size())
+                    .currentPage(page)
+                    .pageSize(size)
                     .recentMatches(recentMatches)
                     .mostPlayedChampions(mostPlayedChampions)
                     .bestTeamwork(bestTeamwork)
@@ -468,23 +482,37 @@ public class MatchService {
      * 전체 매치 조회 (MatchId 기준 정렬)
      */
     @Transactional(readOnly = true)
-    public List<MatchDetailResponse> findAllMatches(String sort, String host) {
+    public PaginatedMatchDetailResponse findAllMatches(String sort, String host, int page, int size) {
         Long clanId = determineClanIdFromOrigin(host);
 
-        // 해당 클랜 소속 플레이어가 참가한 매치 ID만 가져옴
+        // 클랜 소속 플레이어가 참가한 매치 ID만 가져옴
         List<Long> matchIds = matchParticipantRepository.findDistinctMatchIdsByPlayerClanId(clanId);
 
         List<Match> matches = "asc".equalsIgnoreCase(sort)
                 ? matchRepository.findAllByIdInOrderByMatchIdAsc(matchIds)
                 : matchRepository.findAllByIdInOrderByMatchIdDesc(matchIds);
 
-        return matches.stream()
-                .map(match -> MatchDetailResponse.from(
-                        match,
-                        matchParticipantRepository.findAllByMatch(match)
-                ))
-                .collect(Collectors.toList());
+        int totalItems = matches.size();
+
+        // 페이징 처리를 위한 서브리스트 계산 (page가 0부터 시작한다고 가정)
+        int fromIndex = page * size;
+        int toIndex = Math.min(fromIndex + size, totalItems);
+
+        // fromIndex가 totalItems보다 크면 빈 리스트 반환
+        List<MatchDetailResponse> pagedMatches = Collections.emptyList();
+        if(fromIndex < totalItems) {
+            pagedMatches = matches.subList(fromIndex, toIndex)
+                    .stream()
+                    .map(match -> MatchDetailResponse.from(
+                            match,
+                            matchParticipantRepository.findAllByMatch(match)
+                    ))
+                    .collect(Collectors.toList());
+        }
+
+        return new PaginatedMatchDetailResponse(totalItems, page, size, pagedMatches);
     }
+
 
     /**
      * MatchId로 매치 상세 조회

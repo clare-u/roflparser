@@ -32,4 +32,9 @@ public class PlayerStatsResponse {
     private List<OpponentStats> bestLaneOpponents; // 맞라인 승률 좋은 상대
     private List<OpponentStats> worstLaneOpponents; // 맞라인 승률 안좋은 상대
 
+    // 페이지네이션
+    private int totalItems;
+    private int currentPage;
+    private int pageSize;
+
 }
