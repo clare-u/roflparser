@@ -1,4 +1,3 @@
-import React from "react";
 import { PlayerStatsResponse, SummaryStats } from "@/types/rofl";
 import MatchCard from "./MatchCard";
 import { useChampionMap, useGetPlayerPositions } from "@/hooks";
@@ -7,10 +6,20 @@ import Image from "next/image";
 import Loading from "./loading/Loading";
 import { mapPositionLabel } from "@/utils/position";
 import Pagination from "@/components/pagination/Pagination";
+import FilterDropdown from "./input/FilterDropdown";
+
+interface FilterOption {
+  label: string;
+  value: "desc" | "asc";
+}
 
 interface Props {
   player: PlayerStatsResponse;
   currentPage: number;
+  selectedLabel: string;
+  filterOptions: FilterOption[];
+  setSelectedFilter: (value: "desc" | "asc") => void;
+  updateURL: (sort: "desc" | "asc") => void;
 }
 
 const SummaryBox = ({
@@ -49,7 +58,14 @@ const SummaryBox = ({
   </div>
 );
 
-const PlayerMatchCard: React.FC<Props> = ({ player, currentPage }) => {
+const PlayerMatchCard: React.FC<Props> = ({
+  player,
+  currentPage,
+  selectedLabel,
+  filterOptions,
+  setSelectedFilter,
+  updateURL,
+}) => {
   const { championMap, loading, error } = useChampionMap();
   const {
     data: playerPositions,
@@ -147,7 +163,27 @@ const PlayerMatchCard: React.FC<Props> = ({ player, currentPage }) => {
 
       {/* 참여 경기 */}
       <div className="mt-6">
-        <h3 className="font-semibold text-lg mb-3 text-gray-800">참여 경기</h3>
+        <div className="flex justify-between">
+          <h3 className="font-semibold text-lg text-gray-800 text-nowrap">
+            참여 경기
+          </h3>
+          {/* 필터 */}
+          <div className="flex w-full justify-end mb-[20px]">
+            <FilterDropdown
+              selectedFilter={selectedLabel}
+              onSelectFilter={(label) => {
+                const selected = filterOptions.find(
+                  (opt) => opt.label === label
+                );
+                if (selected) {
+                  setSelectedFilter(selected.value as "desc" | "asc");
+                  updateURL(selected.value as "desc" | "asc");
+                }
+              }}
+              filterOptions={filterOptions.map((opt) => opt.label)}
+            />
+          </div>
+        </div>
         {player.matches.map((matchInfo, idx) => (
           <MatchCard
             key={idx}

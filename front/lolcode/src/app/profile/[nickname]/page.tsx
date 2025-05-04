@@ -1,11 +1,18 @@
 "use client";
 
-import { useParams, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useMatchesByPlayer } from "@/hooks/rofl";
 import Loading from "@/components/loading/Loading";
 import PlayerMatchCard from "@/components/PlayerMatchCard";
 
+interface FilterOption {
+  label: string;
+  value: "desc" | "asc";
+}
+
 export default function SearchPage() {
+  const router = useRouter();
   const params = useParams<{ nickname: string }>();
   const searchParams = useSearchParams();
 
@@ -16,11 +23,37 @@ export default function SearchPage() {
   const pageParam = searchParams.get("page");
   const currentPage = pageParam ? parseInt(pageParam) : 1;
 
+  // 필터
+  const filterOptions: FilterOption[] = [
+    { label: "최신순", value: "desc" },
+    { label: "오래된순", value: "asc" },
+  ];
+  const currentOrder = (searchParams.get("sort") as "desc" | "asc") || "desc";
+  const [selectedFilter, setSelectedFilter] = useState<"desc" | "asc">(
+    currentOrder
+  );
+
   const {
     data: stats,
     isLoading,
     error,
-  } = useMatchesByPlayer(nickname, tagline, "desc", currentPage - 1);
+  } = useMatchesByPlayer(nickname, tagline, selectedFilter, currentPage - 1);
+
+  // URL 업데이트 함수
+  const updateURL = (newSort: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    // 정렬 필터 적용
+    params.set("sort", newSort);
+
+    // 페이지를 1로 초기화 (필터 바뀌면 처음 페이지부터 보도록)
+    params.set("page", "1");
+
+    router.replace(`?${params.toString()}`);
+  };
+
+  const selectedLabel =
+    filterOptions.find((opt) => opt.value === selectedFilter)?.label || "";
 
   const firstStats = Array.isArray(stats) ? stats[0] : stats;
 
@@ -41,7 +74,14 @@ export default function SearchPage() {
     <div className="flex w-full max-w-[1200px] flex-col gap-[20px] py-[40px]">
       {stats && (
         <>
-          <PlayerMatchCard player={firstStats} currentPage={currentPage} />
+          <PlayerMatchCard
+            player={firstStats}
+            currentPage={currentPage}
+            selectedLabel={selectedLabel}
+            filterOptions={filterOptions}
+            setSelectedFilter={setSelectedFilter}
+            updateURL={updateURL}
+          />
         </>
       )}
     </div>
