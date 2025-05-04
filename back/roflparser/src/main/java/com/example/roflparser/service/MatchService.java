@@ -448,35 +448,49 @@ public class MatchService {
     public void updatePlayerNickname(String oldGameName, String oldTagLine, String newGameName, String newTagLine, String host) {
         Long clanId = determineClanIdFromOrigin(host);
 
-        Player player = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(oldGameName, oldTagLine)
+        Player oldPlayer = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(oldGameName, oldTagLine)
                 .orElseThrow(() -> new IllegalArgumentException("기존 닉네임의 플레이어를 찾을 수 없습니다."));
 
-        if (!player.getClan().getId().equals(clanId)) {
+        if (!oldPlayer.getClan().getId().equals(clanId)) {
             throw new IllegalArgumentException("해당 클랜 소속의 플레이어가 아닙니다.");
         }
 
-        // 동일한 새 닉네임이 이미 존재하는지 체크
         Optional<Player> existing = playerRepository.findByRiotIdGameNameAndRiotIdTagLine(newGameName, newTagLine);
+
         if (existing.isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
+            Player newPlayer = existing.get();
+
+            // 전적 이관
+            matchParticipantRepository.updatePlayerId(oldPlayer.getId(), newPlayer.getId());
+
+            // 기존 oldPlayer soft delete
+            oldPlayer.delete();
+
+            // 이력 저장
+            nicknameHistoryRepository.save(PlayerNicknameHistory.builder()
+                    .player(newPlayer)
+                    .oldGameName(oldGameName)
+                    .oldTagLine(oldTagLine)
+                    .newGameName(newGameName)
+                    .newTagLine(newTagLine)
+                    .changedAt(LocalDateTime.now())
+                    .build());
+
+        } else {
+            // 단순 닉네임 변경
+            nicknameHistoryRepository.save(PlayerNicknameHistory.builder()
+                    .player(oldPlayer)
+                    .oldGameName(oldGameName)
+                    .oldTagLine(oldTagLine)
+                    .newGameName(newGameName)
+                    .newTagLine(newTagLine)
+                    .changedAt(LocalDateTime.now())
+                    .build());
+
+            oldPlayer.setRiotIdGameName(newGameName);
+            oldPlayer.setRiotIdTagLine(newTagLine);
         }
-
-        // 이력 저장
-        PlayerNicknameHistory history = PlayerNicknameHistory.builder()
-                .player(player)
-                .oldGameName(player.getRiotIdGameName())
-                .oldTagLine(player.getRiotIdTagLine())
-                .newGameName(newGameName)
-                .newTagLine(newTagLine)
-                .changedAt(LocalDateTime.now())
-                .build();
-
-        nicknameHistoryRepository.save(history);
-
-        player.setRiotIdGameName(newGameName);
-        player.setRiotIdTagLine(newTagLine);
     }
-
 
     /**
      * 전체 매치 조회 (MatchId 기준 정렬)
