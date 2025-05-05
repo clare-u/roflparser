@@ -5,6 +5,7 @@ import QueryProvider from "@/components/QueryProvider";
 import Navigation from "@/components/navigation/Navigation";
 import Script from "next/script";
 import { Suspense } from "react";
+import ScrollToTopButton from "@/components/button/ScrollToTopButton";
 
 export const metadata: Metadata = {
   title: "코드롤내전봇",
@@ -45,6 +46,7 @@ export default function RootLayout({
             <div className="flex h-full flex-col items-center justify-center">
               {children}
             </div>
+            <ScrollToTopButton />
           </Suspense>
           <Toaster richColors position="top-right" offset={60} />
         </QueryProvider>
