@@ -1,4 +1,4 @@
-import { PlayerStatsResponse, SummaryStats } from "@/types/rofl";
+import { PlayerStatsResponse, SummaryStats } from "@/types";
 import MatchCard from "./MatchCard";
 import { useChampionMap, useGetPlayerPositions } from "@/hooks";
 import ChampionPortrait from "./ChampionPortrait";
@@ -143,16 +143,16 @@ const PlayerMatchCard: React.FC<Props> = ({
           챔피언별 전적
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {Object.entries(player.byChampion).map(([champion, stats]) => (
+          {player.byChampion.map((stats) => (
             <SummaryBox
-              key={champion}
+              key={stats.champion}
               title={
                 <div className="flex items-center gap-2">
                   <ChampionPortrait
-                    championId={champion}
+                    championId={stats.champion}
                     nameMap={championMap}
                   />
-                  <span>{championMap[champion] || champion}</span>
+                  <span>{championMap[stats.champion] || stats.champion}</span>
                 </div>
               }
               stats={stats}

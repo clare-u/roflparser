@@ -47,7 +47,7 @@ export interface PlayerStatsResponse {
   gameName: string;
   tagLine: string;
   summary: SummaryStats;
-  byChampion: Record<string, SummaryStats>;
+  byChampion: ChampionStats[];
   byPosition: Record<string, SummaryStats>;
   matches: PlayerMatchInfo[];
   recentMatches: RecentMatchSummary[];
@@ -86,8 +86,16 @@ export interface RecentMatchSummary {
 export interface ChampionStats {
   champion: string;
   matches: number;
+  wins: number;
+  losses: number;
   winRate: number;
   kda: number;
+  kills: number;
+  deaths: number;
+  assists: number;
+  avgKills: number;
+  avgDeaths: number;
+  avgAssists: number;
 }
 
 export interface TeamworkStats {
