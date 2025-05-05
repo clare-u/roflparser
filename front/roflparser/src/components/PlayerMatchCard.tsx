@@ -1,3 +1,6 @@
+"use client";
+import { useState } from "react";
+
 import { PlayerStatsResponse, SummaryStats } from "@/types";
 import MatchCard from "./MatchCard";
 import { useChampionMap, useGetPlayerPositions } from "@/hooks";
@@ -66,6 +69,9 @@ const PlayerMatchCard: React.FC<Props> = ({
   setSelectedFilter,
   updateURL,
 }) => {
+  // 챔피언별 전적 토글
+  const [showAllChampions, setShowAllChampions] = useState(false);
+
   const { championMap, loading, error } = useChampionMap();
   const {
     data: playerPositions,
@@ -84,6 +90,11 @@ const PlayerMatchCard: React.FC<Props> = ({
     "UTILITY",
   ] as const;
   type PositionKey = (typeof orderedPositions)[number];
+
+  // 챔피언별 전적 최대 6개만 보여주기
+  const visibleChampionStats = showAllChampions
+    ? player.byChampion
+    : player.byChampion.slice(0, 6);
 
   return (
     <div className="border rounded-xl p-6 mb-6 shadow-md bg-gray-50">
@@ -143,7 +154,7 @@ const PlayerMatchCard: React.FC<Props> = ({
           챔피언별 전적
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {player.byChampion.map((stats) => (
+          {visibleChampionStats.map((stats) => (
             <SummaryBox
               key={stats.champion}
               title={
@@ -159,6 +170,16 @@ const PlayerMatchCard: React.FC<Props> = ({
             />
           ))}
         </div>
+        {player.byChampion.length > 6 && (
+          <div className="mt-2 text-right">
+            <button
+              onClick={() => setShowAllChampions(!showAllChampions)}
+              className="hover:underline text-[16px]"
+            >
+              {showAllChampions ? "접기 ▲" : "펼쳐보기 ▼"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 참여 경기 */}
