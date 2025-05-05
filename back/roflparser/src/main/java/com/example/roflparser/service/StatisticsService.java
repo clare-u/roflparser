@@ -128,18 +128,20 @@ public class StatisticsService {
     }
 
     /**
-     * 인기 챔피언: 판수 기준으로 내림차순 정렬
+     * 인기 챔피언: 판수 기준, 승률 높은순으로 내림차순 정렬
      */
     private List<ChampionStatisticsResponse.ChampionStatDto> mapToPopularChampions(List<ChampionStat> stats) {
         return stats.stream()
-                .sorted(Comparator.comparingLong(ChampionStat::getMatches).reversed())
+                .sorted(
+                        Comparator.<ChampionStat>comparingLong(s -> s.getMatches()).reversed()
+                                .thenComparingDouble(ChampionStat::getWinRate).reversed()
+                )
                 .limit(20)
-                .map(s -> ChampionStatisticsResponse.ChampionStatDto.builder()
-                        .name(s.getChampion())
-                        .matches((int) s.getMatches())
-                        .wins((int) s.getWins())
-                        .losses((int) s.getLosses())
-                        .winRate(s.getWinRate())
+                .map(stat -> ChampionStatisticsResponse.ChampionStatDto.builder()
+                        .name(stat.getChampion())
+                        .matches(stat.getMatches())
+                        .wins(stat.getWins())
+                        .winRate(stat.getWinRate())
                         .build())
                 .toList();
     }
@@ -166,9 +168,9 @@ public class StatisticsService {
                     double score = s.getWinRate() * 0.7 + pickRate * 0.3;
                     return ChampionScoreDto.builder()
                             .name(s.getChampion())
-                            .matches((int) s.getMatches())
-                            .wins((int) s.getWins())
-                            .losses((int) s.getLosses())
+                            .matches(s.getMatches())
+                            .wins(s.getWins())
+                            .losses(s.getLosses())
                             .winRate(s.getWinRate())
                             .pickRate(pickRate)
                             .score(score)

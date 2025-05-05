@@ -16,9 +16,9 @@ public class ChampionStatisticsResponse {
     @Builder
     public static class ChampionStatDto {
         private String name;
-        private int matches;
-        private int wins;
-        private int losses;
+        private long matches;
+        private long wins;
+        private long losses;
         private double winRate;
     }
 
@@ -26,9 +26,9 @@ public class ChampionStatisticsResponse {
     @Builder
     public static class ChampionScoreDto {
         private String name;
-        private int matches;
-        private int wins;
-        private int losses;
+        private long matches;
+        private long wins;
+        private long losses;
         private double winRate;
         private double pickRate;
         private double score;

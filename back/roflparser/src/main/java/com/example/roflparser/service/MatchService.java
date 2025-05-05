@@ -365,52 +365,85 @@ public class MatchService {
                 stat.calcWinRate();
             });
 
-            byPosition.values().forEach(stat -> {
-                stat.setKda(calcKda(stat));
-                calcAverageStats(stat);
-                stat.calcWinRate();
-            });
-
-            // 모스트 챔피언 상위 10
-            List<ChampionStats> mostPlayedChampions = byChampion.entrySet().stream()
-                    .sorted((a, b) -> b.getValue().getMatches() - a.getValue().getMatches())
-                    .limit(10)
+            // byChampion 정렬 리스트 생성: 전적 많은 순 → 승률 높은 순
+            List<ChampionStats> championStatsSorted = byChampion.entrySet().stream()
                     .map(entry -> ChampionStats.builder()
                             .champion(entry.getKey())
                             .matches(entry.getValue().getMatches())
                             .winRate(entry.getValue().getWinRate())
                             .kda(entry.getValue().getKda())
                             .build())
+                    .sorted(
+                            Comparator.comparingInt(ChampionStats::getMatches).reversed()
+                                    .thenComparing(Comparator.comparingDouble(ChampionStats::getWinRate).reversed())
+                    )
+                    .toList();
+
+            byPosition.values().forEach(stat -> {
+                stat.setKda(calcKda(stat));
+                calcAverageStats(stat);
+                stat.calcWinRate();
+            });
+
+            // 모스트 챔피언 상위 10: 전적 많은 순 → 승률 높은 순
+            List<ChampionStats> mostPlayedChampions = byChampion.entrySet().stream()
+                    .map(entry -> ChampionStats.builder()
+                            .champion(entry.getKey())
+                            .matches(entry.getValue().getMatches())
+                            .winRate(entry.getValue().getWinRate())
+                            .kda(entry.getValue().getKda())
+                            .build())
+                    .sorted(
+                            Comparator.comparingInt(ChampionStats::getMatches).reversed()
+                                    .thenComparing(Comparator.comparingDouble(ChampionStats::getWinRate).reversed())
+                    )
+                    .limit(10)
                     .toList();
 
             // 팀워크 좋은 팀원 (5전 이상 + 승률 >= 50%)
+            // 정렬 기준: 승률 높은 순 → 전적 많은 순
             List<TeamworkStats> bestTeamwork = teamworkMap.values().stream()
                     .filter(t -> t.getMatches() >= 5 && t.getWinRate() >= 50.0)
-                    .sorted((a, b) -> Double.compare(b.getWinRate(), a.getWinRate()))
+                    .sorted(
+                            Comparator.comparingDouble(TeamworkStatsAggregator::getWinRate).reversed()
+                                    .thenComparing(Comparator.comparingInt(TeamworkStatsAggregator::getMatches).reversed())
+                    )
                     .limit(10)
                     .map(TeamworkStatsAggregator::toDto)
                     .toList();
 
             // 팀워크 안 좋은 팀원 (5전 이상 + 승률 < 50%)
+            // 정렬 기준: 승률 낮은 순 → 전적 많은 순
             List<TeamworkStats> worstTeamwork = teamworkMap.values().stream()
                     .filter(t -> t.getMatches() >= 5 && t.getWinRate() < 50.0)
-                    .sorted(Comparator.comparingDouble(TeamworkStatsAggregator::getWinRate))
+                    .sorted(
+                            Comparator.comparingDouble(TeamworkStatsAggregator::getWinRate)
+                                    .thenComparing(Comparator.comparingInt(TeamworkStatsAggregator::getMatches).reversed())
+                    )
                     .limit(10)
                     .map(TeamworkStatsAggregator::toDto)
                     .toList();
 
             // 맞라인 강한 상대 (5전 이상 + 승률 >= 50%)
+            // 정렬 기준: 승률 높은 순 → 전적 많은 순
             List<OpponentStats> bestLaneOpponents = opponentMap.values().stream()
                     .filter(o -> o.getMatches() >= 5 && o.getWinRate() >= 50.0)
-                    .sorted((a, b) -> Double.compare(b.getWinRate(), a.getWinRate()))
+                    .sorted(
+                            Comparator.comparingDouble(OpponentStatsAggregator::getWinRate).reversed()
+                                    .thenComparing(Comparator.comparingInt(OpponentStatsAggregator::getMatches).reversed())
+                    )
                     .limit(10)
                     .map(OpponentStatsAggregator::toDto)
                     .toList();
 
             // 맞라인 약한 상대 (5전 이상 + 승률 < 50%)
+            // 정렬 기준: 승률 낮은 순 → 전적 많은 순
             List<OpponentStats> worstLaneOpponents = opponentMap.values().stream()
                     .filter(o -> o.getMatches() >= 5 && o.getWinRate() < 50.0)
-                    .sorted(Comparator.comparingDouble(OpponentStatsAggregator::getWinRate))
+                    .sorted(
+                            Comparator.comparingDouble(OpponentStatsAggregator::getWinRate)
+                                    .thenComparing(Comparator.comparingInt(OpponentStatsAggregator::getMatches).reversed())
+                    )
                     .limit(10)
                     .map(OpponentStatsAggregator::toDto)
                     .toList();
@@ -425,7 +458,7 @@ public class MatchService {
                     .tagLine(player.getRiotIdTagLine())
                     .summary(summary)
                     .monthlyStats(monthlyStats)
-                    .byChampion(byChampion)
+                    .byChampion(championStatsSorted)
                     .byPosition(byPosition)
                     .matches(pagedMatches)
                     .totalItems(matches.size())

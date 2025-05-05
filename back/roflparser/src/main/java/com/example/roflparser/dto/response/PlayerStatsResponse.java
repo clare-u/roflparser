@@ -19,7 +19,7 @@ public class PlayerStatsResponse {
     private String tagLine;
 
     private SummaryStats summary;
-    private Map<String, SummaryStats> byChampion;
+    private List<ChampionStats> byChampion;
     private Map<Position, SummaryStats> byPosition;
 
     private List<PlayerMatchInfo> matches;
