@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
 
+import { useState } from "react";
 import { PlayerStatsResponse, SummaryStats } from "@/types";
 import MatchCard from "./MatchCard";
-import { useChampionMap, useGetPlayerPositions } from "@/hooks";
+import { useChampionMap } from "@/hooks";
 import ChampionPortrait from "./ChampionPortrait";
 import Image from "next/image";
 import Loading from "./loading/Loading";
@@ -73,14 +73,9 @@ const PlayerMatchCard: React.FC<Props> = ({
   const [showAllChampions, setShowAllChampions] = useState(false);
 
   const { championMap, loading, error } = useChampionMap();
-  const {
-    data: playerPositions,
-    isLoading: positionLoading,
-    error: positionError,
-  } = useGetPlayerPositions(player.gameName);
 
-  if (loading || positionLoading) return <Loading />;
-  if (error || positionError) return <div>오류 발생: {error}</div>;
+  if (loading) return <Loading />;
+  if (error) return <div>오류 발생: {error}</div>;
 
   const orderedPositions = [
     "TOP",
@@ -104,31 +99,6 @@ const PlayerMatchCard: React.FC<Props> = ({
 
       {/* 총 전적 */}
       <SummaryBox title="총 전적" stats={player.summary} />
-
-      {/* 라인별 내전 티어 */}
-      <div className="mt-6">
-        <h3 className="font-semibold text-lg mb-2 text-gray-800">
-          라인별 내전 티어
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3 border rounded-xl ">
-          {orderedPositions.map((position: PositionKey) => (
-            <div key={position} className="p-4 flex items-center gap-2">
-              <Image
-                src={`/position/${position}.svg`}
-                alt={mapPositionLabel(position)}
-                width={20}
-                height={20}
-              />
-              <h4 className="font-bold text-gray-700">
-                {mapPositionLabel(position)}
-              </h4>
-              <span className="">
-                {playerPositions?.positions?.[position] ?? "미정"}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* 라인별 전적 */}
       <div className="mt-4">

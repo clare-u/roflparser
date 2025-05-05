@@ -77,7 +77,6 @@ const Navigation = () => {
       <div className="flex gap-[36px] p-10">
         <NavigationItem href="/recent">최근 전적</NavigationItem>
         <NavigationItem href="/profile">프로필</NavigationItem>
-        <NavigationItem href="/team">팀 편성</NavigationItem>
         <NavigationItem href="/statistics">통계</NavigationItem>
       </div>
 
