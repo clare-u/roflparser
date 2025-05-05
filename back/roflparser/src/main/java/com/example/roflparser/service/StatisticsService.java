@@ -131,16 +131,18 @@ public class StatisticsService {
      * 인기 챔피언: 판수 기준, 승률 높은순으로 내림차순 정렬
      */
     private List<ChampionStatisticsResponse.ChampionStatDto> mapToPopularChampions(List<ChampionStat> stats) {
+        System.out.println("=== Sorted Result Preview ===");
         return stats.stream()
                 .sorted(
-                        Comparator.<ChampionStat>comparingLong(s -> s.getMatches()).reversed()
-                                .thenComparingDouble(ChampionStat::getWinRate).reversed()
+                        Comparator.comparingLong(ChampionStat::getMatches).reversed()
+                                .thenComparing(Comparator.comparingDouble(ChampionStat::getWinRate).reversed())
                 )
                 .limit(20)
                 .map(stat -> ChampionStatisticsResponse.ChampionStatDto.builder()
                         .name(stat.getChampion())
                         .matches(stat.getMatches())
                         .wins(stat.getWins())
+                        .losses(stat.getLosses())
                         .winRate(stat.getWinRate())
                         .build())
                 .toList();

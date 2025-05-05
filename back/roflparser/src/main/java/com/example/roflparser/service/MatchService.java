@@ -621,8 +621,6 @@ public class MatchService {
         stats.setKills(stats.getKills() + safeInt(p.getChampionsKilled()));
         stats.setDeaths(stats.getDeaths() + safeInt(p.getNumDeaths()));
         stats.setAssists(stats.getAssists() + safeInt(p.getAssists()));
-
-
     }
 
     /**
