@@ -7,7 +7,7 @@ import { toast } from "sonner";
 export default function Rofl() {
   const [file, setFile] = useState<File | null>(null);
 
-  const [description, setDescription] = useState<String>(
+  const [description, setDescription] = useState<string>(
     "등록하실 리플레이 파일을 선택하거나 올려주세요"
   );
 
