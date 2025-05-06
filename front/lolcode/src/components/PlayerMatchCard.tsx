@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
 
+import { useState } from "react";
 import { PlayerStatsResponse, SummaryStats } from "@/types";
 import MatchCard from "./MatchCard";
 import { useChampionMap } from "@/hooks";
@@ -105,7 +105,7 @@ const PlayerMatchCard: React.FC<Props> = ({
         <h3 className="font-semibold text-lg mb-2 text-gray-800">
           라인별 전적
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1  tablet:grid-cols-2 desktop:grid-cols-3 gap-3">
           {Object.entries(player.byPosition)
             .sort(
               ([a], [b]) =>
@@ -123,7 +123,7 @@ const PlayerMatchCard: React.FC<Props> = ({
         <h3 className="font-semibold text-lg mb-2 text-gray-800">
           챔피언별 전적
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-3 gap-3">
           {visibleChampionStats.map((stats) => (
             <SummaryBox
               key={stats.champion}

@@ -48,8 +48,8 @@ const Navigation = () => {
   };
 
   return (
-    <>
-      <nav className="sticky top-0 z-50 flex h-[80px] w-full items-center justify-center bg-indigo-800 px-[40px]">
+    <div className="sticky top-0 z-50 bg-indigo-800">
+      <nav className="flex h-[80px] w-full items-center justify-center px-[40px]">
         <div className="flex w-full max-w-[1200px] h-full items-center justify-between">
           {/* 로고 영역 */}
           <Link href="/">
@@ -99,7 +99,7 @@ const Navigation = () => {
 
       {/* 모바일용 메뉴 (토글 열림 시 표시) */}
       {isOpen && (
-        <div className="flex flex-col gap-[10px] pb-[20px] px-[30px] desktop:hidden bg-indigo-800 text-white justify-center items-end">
+        <div className="flex flex-col gap-[10px] pb-[20px] px-[30px] desktop:hidden text-white justify-center items-end">
           <NavigationItem href="/recent">최근 전적</NavigationItem>
           <NavigationItem href="/profile">프로필</NavigationItem>
           <NavigationItem href="/statistics">통계</NavigationItem>
@@ -111,7 +111,7 @@ const Navigation = () => {
           />
         </div>
       )}
-    </>
+    </div>
   );
 };
 
