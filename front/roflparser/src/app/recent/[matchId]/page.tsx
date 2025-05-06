@@ -37,7 +37,7 @@ export default function SearchPage() {
     );
 
   return (
-    <div className="flex w-full max-w-[1200px] flex-col gap-[20px] py-[40px]">
+    <div className="flex w-full max-w-[1200px] flex-col gap-[20px] px-[5px] desktop:px-[40px] py-[20px] desktop:py-[60px]">
       <div>
         <MatchCard match={match} championMap={championMap} />
       </div>

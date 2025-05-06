@@ -46,7 +46,7 @@ export default function StatisticsPage() {
   console.log(champData);
 
   return (
-    <div className="py-[40px] max-w-[1200px] w-[100%]">
+    <div className="px-[5px] desktop:px-[40px] py-[20px] desktop:py-[60px] max-w-[1200px] w-[100%]">
       <div className="py-[20px] flex justify-between">
         <div className="text-3xl font-bold mb-4">📊 월별 통계</div>
 

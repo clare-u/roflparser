@@ -8,7 +8,7 @@ export default function Rofl() {
   const [file, setFile] = useState<File | null>(null);
 
   const [description, setDescription] = useState<string>(
-    "등록하실 리플레이 파일을 선택하거나 올려주세요"
+    "등록하실 리플레이 파일을 올려주세요"
   );
 
   // 사용자가 파일을 드래그 중임을 상태로 관리 (UI 변경을 위해 사용)
@@ -58,8 +58,8 @@ export default function Rofl() {
 
   return (
     <div className="flex items-center justify-between">
-      <div className="flex flex-col gap-[0px] w-[60%]">
-        <div className="w-[100%] p-[10px] text-[40px] font-bold leading-tight">
+      <div className="hidden desktop:flex flex-col gap-[0px] w-[60%]">
+        <div className="w-[100%] p-[10px] text-[35px] font-bold leading-tight">
           리플레이 파일(.rofl)을
         </div>
         <div className="w-[100%] p-[10px] text-[40px] font-bold leading-tight">
@@ -112,8 +112,9 @@ export default function Rofl() {
           </div>
         </div>
         <div className="flex justify-between px-[10px] py-[2px] items-end">
-          <div className=" text-[12px]">
-            리플레이 파일 경로는 📁문서\League of Legends\Replays
+          <div>
+            <div className=" text-[12px]">리플레이 파일 경로는</div>
+            <div className=" text-[12px]">📁문서\League of Legends\Replays</div>
           </div>
           <button
             onClick={() => file && handleUpload(file)}

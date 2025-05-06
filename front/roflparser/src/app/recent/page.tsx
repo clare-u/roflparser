@@ -66,7 +66,7 @@ export default function SearchPage() {
   if (error || champError) return <div>에러 발생: {error?.message}</div>;
 
   return (
-    <div className="flex w-full max-w-[1200px] flex-col gap-[20px] py-[20px]">
+    <div className="flex w-full max-w-[1200px] flex-col gap-[20px] px-[5px] desktop:px-[40px] py-[20px]">
       <div>
         {/* 필터 */}
         <div className="flex w-full justify-end py-[20px]">
