@@ -49,43 +49,51 @@ const Navigation = () => {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 flex h-[80px] w-full items-center justify-between bg-indigo-800 px-[40px]">
-        {/* 로고 영역 */}
-        <Link href="/">
-          <Image src="/logo.png" alt="Logo" width={130} height={45} priority />
-        </Link>
+      <nav className="sticky top-0 z-50 flex h-[80px] w-full items-center justify-center bg-indigo-800 px-[40px]">
+        <div className="flex w-full max-w-[1200px] h-full items-center justify-between">
+          {/* 로고 영역 */}
+          <Link href="/">
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={130}
+              height={45}
+              priority
+            />
+          </Link>
 
-        <button
-          onClick={toggleMenu}
-          className="desktop:hidden flex p-[5px] cursor-pointer text-white"
-        >
-          <span
-            className="material-symbols-outlined"
-            style={{
-              fontSize: "32px",
-              fontVariationSettings:
-                "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 32",
-            }}
+          <button
+            onClick={toggleMenu}
+            className="desktop:hidden flex p-[5px] cursor-pointer text-white"
           >
-            menu
-          </span>
-        </button>
+            <span
+              className="material-symbols-outlined"
+              style={{
+                fontSize: "32px",
+                fontVariationSettings:
+                  "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 32",
+              }}
+            >
+              menu
+            </span>
+          </button>
 
-        {/* 메뉴 영역 */}
-        <div className="hidden desktop:flex gap-[36px] p-[10px]">
-          <NavigationItem href="/recent">최근 전적</NavigationItem>
-          <NavigationItem href="/profile">프로필</NavigationItem>
-          <NavigationItem href="/statistics">통계</NavigationItem>
-        </div>
+          {/* 메뉴 영역 */}
+          <div className="hidden desktop:flex gap-[36px] p-[10px]">
+            <NavigationItem href="/recent">최근 전적</NavigationItem>
+            <NavigationItem href="/profile">프로필</NavigationItem>
+            <NavigationItem href="/statistics">통계</NavigationItem>
+          </div>
 
-        {/* 검색 영역 */}
-        <div className="hidden desktop:flex gap-[36px] p-[10px]">
-          <SearchInput
-            placeholder="닉네임으로 검색하세요"
-            value={searchValue}
-            onChange={handleSearchChange}
-            onSubmit={handleSearchSubmit}
-          />
+          {/* 검색 영역 */}
+          <div className="hidden desktop:flex gap-[36px] p-[10px]">
+            <SearchInput
+              placeholder="닉네임으로 검색하세요"
+              value={searchValue}
+              onChange={handleSearchChange}
+              onSubmit={handleSearchSubmit}
+            />
+          </div>
         </div>
       </nav>
 
