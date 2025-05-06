@@ -21,7 +21,7 @@ const NavigationItem: React.FC<NavigationItemProps> = ({
   return (
     <Link
       href={href}
-      className={`flex h-[80px] items-center justify-center gap-[10px] whitespace-nowrap px-[20px] py-[26px] text-16 text-white ${
+      className={`flex desktop:h-[80px] items-center justify-center whitespace-nowrap p-[10px] desktop:px-[20px] desktop:py-[26px] text-[16px] text-white ${
         isActive ? "font-extrabold" : ""
       } hover:bg-indigo-900`}
     >

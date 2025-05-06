@@ -8,13 +8,13 @@ import NavigationItem from "./NavigationItem";
 import SearchInput from "../input/SearchInput";
 import { getPlayersByNickname } from "@/libs";
 import { toast } from "sonner";
-// import NavigationProfile from "./NavigationProfile";
-// import { useUserStore } from "@/store/userStore";
-// import { useFetchUser } from "@/hooks";
-// import Loading from "../loading/Loading";
 
 const Navigation = () => {
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+  const toggleMenu = () => {
+    setIsOpen((prev) => !prev);
+  };
 
   const [searchValue, setSearchValue] = useState<string>("");
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,65 +47,63 @@ const Navigation = () => {
     }
   };
 
-  // const user = useUserStore((state) => state.user); // zustand에서 현재 member 상태 가져오기
-  // const setUser = useUserStore((state) => state.setUser); // zustand에서 setMember 가져오기
-  // const [fetchData, setFetchData] = useState(false); // API 호출 여부를 제어하기 위한 로컬 상태
-
-  // useEffect(() => {
-  //   if (!user) {
-  //     setFetchData(true); // member가 없으면 데이터를 받아오도록 설정
-  //   }
-  // }, [user]);
-
-  // const { data: userData, isLoading, error } = useFetchUser(); // 인자 없이 호출
-
-  // useEffect(() => {
-  //   if (userData && !user && fetchData) {
-  //     setUser(userData); // member 상태가 없을 때만 zustand에 저장
-  //     setFetchData(false); // 데이터를 받아온 후 다시 API 호출을 막기 위해 설정
-  //   }
-  // }, [userData, user, setUser, fetchData]);
-
   return (
-    <nav className="sticky top-0 z-50 flex h-[80px] items-center justify-between bg-indigo-800 px-40">
-      {/* 로고 영역 */}
-      <Link href="/">
-        <Image src="/logo.png" alt="Logo" width={130} height={45} priority />
-      </Link>
+    <>
+      <nav className="sticky top-0 z-50 flex h-[80px] w-full items-center justify-between bg-indigo-800 px-[40px]">
+        {/* 로고 영역 */}
+        <Link href="/">
+          <Image src="/logo.png" alt="Logo" width={130} height={45} priority />
+        </Link>
 
-      {/* 메뉴 영역 */}
-      <div className="flex gap-[36px] p-10">
-        <NavigationItem href="/recent">최근 전적</NavigationItem>
-        <NavigationItem href="/profile">프로필</NavigationItem>
-        <NavigationItem href="/statistics">통계</NavigationItem>
-      </div>
+        <button
+          onClick={toggleMenu}
+          className="desktop:hidden flex p-[5px] cursor-pointer text-white"
+        >
+          <span
+            className="material-symbols-outlined"
+            style={{
+              fontSize: "32px",
+              fontVariationSettings:
+                "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 32",
+            }}
+          >
+            menu
+          </span>
+        </button>
 
-      {/* 프로필 영역 */}
-      <div className="flex gap-36 p-10">
-        {/* {isLoading ? (
-          // 로딩 중일 때 표시할 로딩 스피너 또는 텍스트
-          <Loading />
-        ) : userData ? (
-          <NavigationProfile
-            image={userData.userImageUrl}
-            nickname={userData.userNickname}
-            email={userData.userEmail}
-            repo={userData.userRepo}
+        {/* 메뉴 영역 */}
+        <div className="hidden desktop:flex gap-[36px] p-[10px]">
+          <NavigationItem href="/recent">최근 전적</NavigationItem>
+          <NavigationItem href="/profile">프로필</NavigationItem>
+          <NavigationItem href="/statistics">통계</NavigationItem>
+        </div>
+
+        {/* 검색 영역 */}
+        <div className="hidden desktop:flex gap-[36px] p-[10px]">
+          <SearchInput
+            placeholder="닉네임으로 검색하세요"
+            value={searchValue}
+            onChange={handleSearchChange}
+            onSubmit={handleSearchSubmit}
           />
-        )  
-        : (*/}
-        <SearchInput
-          placeholder="닉네임으로 검색하세요"
-          value={searchValue}
-          onChange={handleSearchChange}
-          onSubmit={handleSearchSubmit}
-        />
+        </div>
+      </nav>
 
-        {/* <NavigationItem href="/login" icon="login">
-          login
-        </NavigationItem> */}
-      </div>
-    </nav>
+      {/* 모바일용 메뉴 (토글 열림 시 표시) */}
+      {isOpen && (
+        <div className="flex flex-col gap-[10px] pb-[20px] px-[30px] desktop:hidden bg-indigo-800 text-white justify-center items-end">
+          <NavigationItem href="/recent">최근 전적</NavigationItem>
+          <NavigationItem href="/profile">프로필</NavigationItem>
+          <NavigationItem href="/statistics">통계</NavigationItem>
+          <SearchInput
+            placeholder="닉네임으로 검색하세요"
+            value={searchValue}
+            onChange={handleSearchChange}
+            onSubmit={handleSearchSubmit}
+          />
+        </div>
+      )}
+    </>
   );
 };
 
