@@ -46,8 +46,8 @@ export default function StatisticsPage() {
   console.log(champData);
 
   return (
-    <div className="px-[5px] desktop:px-[40px] py-[20px] desktop:py-[60px] max-w-[1200px] w-[100%]">
-      <div className="py-[20px] flex justify-between">
+    <div className="px-[10px] desktop:px-[40px] py-[20px] desktop:py-[60px] max-w-[1200px] w-[100%]">
+      <div className="py-[20px] flex flex-col tablet:flex-row tablet:justify-between">
         <div className="text-3xl font-bold mb-4">📊 월별 통계</div>
 
         <div className="mb-6">
@@ -70,7 +70,7 @@ export default function StatisticsPage() {
           <Loading />
         ) : (
           <>
-            <div className="grid grid-cols-3 p-[10px]">
+            <div className="grid desktop:grid-cols-3 p-[10px] gap-[15px]">
               <div>
                 <h3 className="font-medium">🔥 인기 챔피언</h3>
                 <ul>
@@ -84,15 +84,25 @@ export default function StatisticsPage() {
               </div>
               <div className="">
                 <h3 className="font-medium">🏆 1티어</h3>
-                {champData?.tier1Champions.map((c) => (
-                  <div key={c.name}>{getKoreanName(c.name)}</div>
-                ))}
+                <ul>
+                  {champData?.tier1Champions.map((c, i) => (
+                    <li key={c.name}>
+                      {i + 1}. {getKoreanName(c.name)} - {c.matches}전 {c.wins}
+                      승 {c.losses}패 ({c.winRate.toFixed(1)}%)
+                    </li>
+                  ))}
+                </ul>
               </div>
               <div className="">
                 <h3 className="font-medium">😥 5티어</h3>
-                {champData?.tier5Champions.map((c) => (
-                  <div key={c.name}>{getKoreanName(c.name)}</div>
-                ))}
+                <ul>
+                  {champData?.tier5Champions.map((c, i) => (
+                    <li key={c.name}>
+                      {i + 1}. {getKoreanName(c.name)} - {c.matches}전 {c.wins}
+                      승 {c.losses}패 ({c.winRate.toFixed(1)}%)
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </>
@@ -106,7 +116,7 @@ export default function StatisticsPage() {
           <Loading />
         ) : (
           <>
-            <div className="grid grid-cols-2 p-[10px]">
+            <div className="grid desktop:grid-cols-2 p-[10px] gap-[15px]">
               <div>
                 <p className="font-medium">🎮 판수 Top 20</p>
                 <ul>
