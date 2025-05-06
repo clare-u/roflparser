@@ -37,13 +37,13 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, win, championMap }) => {
 
   return (
     <div className={`border rounded-xl p-4 mb-4 shadow-lg ${matchBgColor}`}>
-      <div className="mb-2 flex justify-between">
-        <div className="font-semibold">
+      <div className="mb-2 flex justify-between font-semibold">
+        <div>
           {new Date(match.gameDatetime).toLocaleString("ko-KR", {
             timeZone: "Asia/Seoul",
-          })}{" "}
-          ⏱{formatGameLength(match.gameLength)}
+          })}
         </div>
+        <div>⏱{formatGameLength(match.gameLength)}</div>
       </div>
 
       {resultText && (
@@ -52,7 +52,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, win, championMap }) => {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid desktop:grid-cols-2 gap-4">
         {/* 블루팀 */}
         <div>
           <h3
@@ -75,15 +75,17 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, win, championMap }) => {
                     championId={player.champion}
                     nameMap={championMap}
                   />
-                  <Link
-                    href={`/profile/${encodedNickname}`}
-                    className="hover:underline text-black"
-                  >
-                    {player.riotIdGameName} #{player.riotIdTagLine}
-                  </Link>
-                  <span className="text-gray-600">
-                    ({player.kills}/{player.deaths}/{player.assists})
-                  </span>
+                  <div className="flex w-full justify-between tablet:justify-normal gap-[5px]">
+                    <Link
+                      href={`/profile/${encodedNickname}`}
+                      className="hover:underline text-black"
+                    >
+                      {player.riotIdGameName} #{player.riotIdTagLine}
+                    </Link>
+                    <span className="text-gray-600">
+                      ({player.kills}/{player.deaths}/{player.assists})
+                    </span>
+                  </div>
                 </li>
               );
             })}
@@ -112,15 +114,17 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, win, championMap }) => {
                     championId={player.champion}
                     nameMap={championMap}
                   />
-                  <Link
-                    href={`/profile/${encodedNickname}`}
-                    className="hover:underline text-black"
-                  >
-                    {player.riotIdGameName} #{player.riotIdTagLine}
-                  </Link>
-                  <span className="text-gray-600">
-                    ({player.kills}/{player.deaths}/{player.assists})
-                  </span>
+                  <div className="flex w-full justify-between tablet:justify-normal gap-[5px]">
+                    <Link
+                      href={`/profile/${encodedNickname}`}
+                      className="hover:underline text-black"
+                    >
+                      {player.riotIdGameName} #{player.riotIdTagLine}
+                    </Link>
+                    <span className="text-gray-600">
+                      ({player.kills}/{player.deaths}/{player.assists})
+                    </span>
+                  </div>
                 </li>
               );
             })}
