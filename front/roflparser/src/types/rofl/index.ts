@@ -103,6 +103,8 @@ export interface TeamworkStats {
   tagLine: string;
   matches: number;
   winRate: number;
+  wins: number;
+  losses: number;
 }
 
 export interface OpponentStats {
@@ -110,6 +112,8 @@ export interface OpponentStats {
   tagLine: string;
   matches: number;
   winRate: number;
+  wins: number;
+  losses: number;
 }
 
 // 페이지네이션

@@ -10,6 +10,7 @@ import Loading from "./loading/Loading";
 import { mapPositionLabel } from "@/utils/position";
 import Pagination from "@/components/pagination/Pagination";
 import FilterDropdown from "./input/FilterDropdown";
+import Link from "next/link";
 
 interface FilterOption {
   label: string;
@@ -150,6 +151,95 @@ const PlayerMatchCard: React.FC<Props> = ({
             </button>
           </div>
         )}
+      </div>
+
+      {/* 팀워크 / 라인 매치업 통계 */}
+      <div className="mt-6">
+        <h3 className="font-semibold text-lg mb-2 text-gray-800">
+          팀워크 & 맞라인 전적
+        </h3>
+        <div className="grid grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-2 gap-4">
+          <div className="border rounded-lg p-4">
+            <h3 className="font-semibold text-lg text-gray-800 mb-2">
+              팀워크💙
+            </h3>
+            {player.bestTeamwork.map((ally, i) => {
+              const nickname = `${ally.gameName} #${ally.tagLine}`;
+              const encodedNickname = encodeURIComponent(nickname);
+              return (
+                <div key={i} className="text-gray-800">
+                  <Link
+                    href={`/profile/${encodedNickname}`}
+                    className="hover:underline"
+                  >
+                    {nickname}
+                  </Link>{" "}
+                  - {ally.wins}승/{ally.losses}패 {ally.winRate.toFixed(2)}%
+                </div>
+              );
+            })}
+          </div>
+          <div className="border rounded-lg p-4">
+            <h3 className="font-semibold text-lg text-gray-800 mb-2">
+              팀워크💔
+            </h3>
+            {player.worstTeamwork.map((ally, i) => {
+              const nickname = `${ally.gameName} #${ally.tagLine}`;
+              const encodedNickname = encodeURIComponent(nickname);
+              return (
+                <div key={i} className="text-gray-800">
+                  <Link
+                    href={`/profile/${encodedNickname}`}
+                    className="hover:underline"
+                  >
+                    {nickname}
+                  </Link>{" "}
+                  - {ally.wins}승/{ally.losses}패 {ally.winRate.toFixed(2)}%
+                </div>
+              );
+            })}
+          </div>
+          <div className="border rounded-lg p-4">
+            <h3 className="font-semibold text-lg text-gray-800 mb-2">
+              맞라인👍
+            </h3>
+            {player.bestLaneOpponents.map((opp, i) => {
+              const nickname = `${opp.gameName} #${opp.tagLine}`;
+              const encodedNickname = encodeURIComponent(nickname);
+              return (
+                <div key={i} className="text-gray-800">
+                  <Link
+                    href={`/profile/${encodedNickname}`}
+                    className="hover:underline"
+                  >
+                    {nickname}
+                  </Link>{" "}
+                  - {opp.wins}승/{opp.losses}패 {opp.winRate.toFixed(2)}%
+                </div>
+              );
+            })}
+          </div>
+          <div className="border rounded-lg p-4">
+            <h3 className="font-semibold text-lg text-gray-800 mb-2">
+              맞라인👎
+            </h3>
+            {player.worstLaneOpponents.map((opp, i) => {
+              const nickname = `${opp.gameName} #${opp.tagLine}`;
+              const encodedNickname = encodeURIComponent(nickname);
+              return (
+                <div key={i} className="text-gray-800">
+                  <Link
+                    href={`/profile/${encodedNickname}`}
+                    className="hover:underline"
+                  >
+                    {nickname}
+                  </Link>{" "}
+                  - {opp.wins}승/{opp.losses}패 {opp.winRate.toFixed(2)}%
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* 참여 경기 */}
