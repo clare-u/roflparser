@@ -183,12 +183,11 @@ public class RoflController {
             @ApiResponse(responseCode = "400", description = "유효하지 않은 matchId")
     })
     @DeleteMapping("/{matchId}")
-    public ResponseEntity<Void> softDeleteMatch(
-            @Parameter(description = "삭제할 Match의 ID") @PathVariable Long matchId
-    ) {
+    public ResponseEntity<Void> softDeleteMatch(@PathVariable String matchId) {
         matchService.softDeleteMatch(matchId);
-        return ResponseEntity.noContent().build(); // 204 No Content
+        return ResponseEntity.noContent().build();
     }
+
 
     @Operation(summary = "매치 복구", description = "소프트 삭제된 매치를 복원합니다. (deleted = false)")
     @ApiResponses(value = {
@@ -196,11 +195,9 @@ public class RoflController {
             @ApiResponse(responseCode = "400", description = "유효하지 않은 matchId")
     })
     @PostMapping("/{matchId}/restore")
-    public ResponseEntity<Void> restoreMatch(
-            @Parameter(description = "복원할 Match의 ID") @PathVariable Long matchId
-    ) {
+    public ResponseEntity<Void> restoreMatch(@PathVariable String matchId) {
         matchService.restoreMatch(matchId);
-        return ResponseEntity.ok().build(); // 200 OK
+        return ResponseEntity.ok().build();
     }
 
 }
