@@ -732,12 +732,14 @@ client.on("messageCreate", async (message) => {
     }
 
     try {
-      await axios.delete(`https://roflbot.kro.kr/api/matches/${matchId}`, {
-        data: {},
-        headers: {
-          Origin: host,
-        },
-      });
+      await axios.delete(
+        `https://roflbot.kro.kr/api/matches/${matchId}/delete`,
+        {
+          headers: {
+            Origin: host,
+          },
+        }
+      );
       await message.reply(`🗑️ matchId \`${matchId}\` 삭제 완료!`);
     } catch (error) {
       console.error("삭제 오류:", error);

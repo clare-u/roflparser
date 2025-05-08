@@ -182,7 +182,7 @@ public class RoflController {
             @ApiResponse(responseCode = "204", description = "삭제 성공"),
             @ApiResponse(responseCode = "400", description = "유효하지 않은 matchId")
     })
-    @DeleteMapping("/{matchId}")
+    @DeleteMapping("/{matchId}/delete")
     public ResponseEntity<Void> softDeleteMatch(@PathVariable String matchId) {
         matchService.softDeleteMatch(matchId);
         return ResponseEntity.noContent().build();
