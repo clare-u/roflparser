@@ -732,14 +732,11 @@ client.on("messageCreate", async (message) => {
     }
 
     try {
-      await axios.delete(
-        `https://roflbot.kro.kr/api/matches/${matchId}/delete`,
-        {
-          headers: {
-            Origin: host,
-          },
-        }
-      );
+      await axios.delete(`https://roflbot.kro.kr/api/${matchId}/delete`, {
+        headers: {
+          Origin: host,
+        },
+      });
       await message.reply(`🗑️ matchId \`${matchId}\` 삭제 완료!`);
     } catch (error) {
       console.error("삭제 오류:", error);
@@ -759,15 +756,11 @@ client.on("messageCreate", async (message) => {
     }
 
     try {
-      await axios.post(
-        `https://roflbot.kro.kr/api/matches/${matchId}/restore`,
-        null,
-        {
-          headers: {
-            Origin: host,
-          },
-        }
-      );
+      await axios.post(`https://roflbot.kro.kr/api/${matchId}/restore`, null, {
+        headers: {
+          Origin: host,
+        },
+      });
       await message.reply(`♻️ matchId \`${matchId}\` 복구 완료!`);
     } catch (error) {
       console.error("복구 오류:", error);
