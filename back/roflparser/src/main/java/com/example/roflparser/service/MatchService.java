@@ -607,6 +607,28 @@ public class MatchService {
     }
 
     /**
+     * 경기 삭제
+     */
+    @Transactional
+    public void softDeleteMatch(Long matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 matchId의 매치를 찾을 수 없습니다."));
+        match.delete();
+        matchRepository.save(match); // 변경 사항 저장
+    }
+
+    /**
+     * 삭제된 경기 복원
+     */
+    @Transactional
+    public void restoreMatch(Long matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 matchId의 매치를 찾을 수 없습니다."));
+        match.restore();
+        matchRepository.save(match); // 변경 사항 저장
+    }
+
+    /**
      * SummaryStats에 스탯 누적
      */
     private void accumulate(SummaryStats stats, MatchParticipant p) {
