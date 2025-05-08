@@ -733,6 +733,7 @@ client.on("messageCreate", async (message) => {
 
     try {
       await axios.delete(`https://roflbot.kro.kr/api/matches/${matchId}`, {
+        data: {},
         headers: {
           Origin: host,
         },
