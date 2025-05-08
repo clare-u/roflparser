@@ -715,4 +715,64 @@ client.on("messageCreate", async (message) => {
   }
 });
 
+///////////////////// !삭제 / !복구
+client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+
+  const guildId = message.guild?.id;
+  const host = GUILD_HOST_MAP[guildId || ""] || "lolcode.kro.kr";
+
+  // !삭제 <matchId>
+  if (message.content.startsWith("!삭제")) {
+    const args = message.content.split(" ");
+    const matchId = args[1]?.trim();
+
+    if (!matchId) {
+      return message.reply("❌ matchId를 입력해주세요. 예: `!삭제 05082001`");
+    }
+
+    try {
+      await axios.delete(`https://roflbot.kro.kr/api/matches/${matchId}`, {
+        headers: {
+          Origin: host,
+        },
+      });
+      await message.reply(`🗑️ matchId \`${matchId}\` 삭제 완료!`);
+    } catch (error) {
+      console.error("삭제 오류:", error);
+      const msg =
+        error.response?.data?.message || error.message || "알 수 없는 오류";
+      await message.reply(`❌ 삭제 실패: \`${msg}\``);
+    }
+  }
+
+  // !복구 <matchId>
+  if (message.content.startsWith("!복구")) {
+    const args = message.content.split(" ");
+    const matchId = args[1]?.trim();
+
+    if (!matchId) {
+      return message.reply("❌ matchId를 입력해주세요. 예: `!복구 05082001`");
+    }
+
+    try {
+      await axios.post(
+        `https://roflbot.kro.kr/api/matches/${matchId}/restore`,
+        null,
+        {
+          headers: {
+            Origin: host,
+          },
+        }
+      );
+      await message.reply(`♻️ matchId \`${matchId}\` 복구 완료!`);
+    } catch (error) {
+      console.error("복구 오류:", error);
+      const msg =
+        error.response?.data?.message || error.message || "알 수 없는 오류";
+      await message.reply(`❌ 복구 실패: \`${msg}\``);
+    }
+  }
+});
+
 client.login(token);
