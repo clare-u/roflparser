@@ -613,8 +613,14 @@ public class MatchService {
     public void softDeleteMatch(String matchId) {
         Match match = matchRepository.findByMatchId(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 matchId의 매치를 찾을 수 없습니다."));
+
         match.delete();
         matchRepository.save(match); // 변경 사항 저장
+
+        // 관련 참가자 소프트 딜리트
+        List<MatchParticipant> participants = matchParticipantRepository.findAllByMatch(match);
+        participants.forEach(MatchParticipant::delete);
+        matchParticipantRepository.saveAll(participants);
     }
 
     /**
@@ -624,8 +630,13 @@ public class MatchService {
     public void restoreMatch(String matchId) {
         Match match = matchRepository.findByMatchId(matchId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 matchId의 매치를 찾을 수 없습니다."));
+
         match.restore();
-        matchRepository.save(match); // 변경 사항 저장
+        matchRepository.save(match);
+
+        List<MatchParticipant> participants = matchParticipantRepository.findAllByMatch(match);
+        participants.forEach(MatchParticipant::restore);
+        matchParticipantRepository.saveAll(participants);
     }
 
     /**
