@@ -3,7 +3,8 @@ package com.example.roflparser.domain;
 import com.example.roflparser.domain.type.Position;
 import jakarta.persistence.*;
         import lombok.*;
-        import org.springframework.data.annotation.CreatedDate;
+import org.hibernate.annotations.Where;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 @Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Where(clause = "deleted = false")
 public class MatchParticipant {
 
     @Id
